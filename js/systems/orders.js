@@ -41,6 +41,7 @@ function getOrderableRecipes() {
     .filter(r => r && INGREDIENTS[r.result]?.orderable);
 }
 
+// May remove this functionality in future. Different time limits add nothing of value.
 function timeLimitForState() {
   const count = getState().discoveredRecipes.length;
   if (count < 6)  return 90;
@@ -91,7 +92,7 @@ export function tryFillOrders() {
     _orders.push(order);
     changed = true;
   }
-  if (changed) _onChanged?.(_orders);
+  if (changed) _onChanged?.();
 }
 
 export function fulfillOrder(orderId) {
@@ -123,7 +124,7 @@ export function tickOrders() {
     }
   }
 
-  if (hadOrders) _onChanged?.(_orders);
+  if (hadOrders) _onChanged?.();
   if (expired.length > 0) setTimeout(tryFillOrders, 3500);
   return expired;
 }

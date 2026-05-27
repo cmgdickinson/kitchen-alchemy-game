@@ -34,10 +34,6 @@ const FAILURE_MESSAGES = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function randomFrom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
 function updateCoins() {
   const el = document.getElementById('coins');
   if (el) el.textContent = getState().coins;
@@ -134,7 +130,7 @@ function handleCombine() {
   const recipe = tryRecipe(_selected);
 
   if (!recipe) {
-    showFailure(randomFrom(FAILURE_MESSAGES));
+    showFailure(FAILURE_MESSAGES[Math.floor(Math.random() * FAILURE_MESSAGES.length)]);
     return;
   }
 
@@ -213,6 +209,7 @@ function handleReset() {
   if (!confirm('Reset all progress? This cannot be undone.')) return;
   resetState();
   resetOrders();
+  document.querySelectorAll('#order-list [data-expired]').forEach(el => el.remove());
   _selected = [];
   _newItems  = [];
   _milestoneQueue = [];

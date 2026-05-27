@@ -7,8 +7,7 @@ export function renderOrderBoard(orders, discoveredRecipeIds) {
     if (!list.querySelector('.order-placeholder:not([data-expired])')) {
       const placeholder = document.createElement('div');
       placeholder.className = 'order-placeholder';
-      placeholder.innerHTML = `<span class="order-placeholder-emoji">🍽️</span>
-        Discover more recipes to<br>attract hungry customers!`;
+      placeholder.innerHTML = '<span class="order-placeholder-emoji">🍽️</span> Discover more recipes to<br>attract hungry customers!';
       list.appendChild(placeholder);
     }
     return;
@@ -35,10 +34,8 @@ export function renderOrderBoard(orders, discoveredRecipeIds) {
       existing.classList.toggle('expiring', isExpiring);
 
       const fill = existing.querySelector('.order-timer-fill');
-      if (fill) {
-        fill.style.width = `${pct}%`;
-        fill.className = `order-timer-fill ${fillClass}`;
-      }
+      fill.style.width = `${pct}%`;
+      fill.className = `order-timer-fill ${fillClass}`;
       existing.querySelector('.order-timer-text').textContent = `${order.timeRemaining}s`;
 
       // Update the footer if fulfillability changed (new recipe discovered)
@@ -98,14 +95,14 @@ export function showExpiredMessage(order) {
   msg.style.color = 'var(--danger)';
   msg.innerHTML = `
     <div class="expired-message-row">
-      <span></span>
+      <span class="expired-message-text"></span>
       <button class="expired-dismiss-btn" title="Dismiss">✕</button>
     </div>
   `;
   // Set via DOM methods to prevent XSS if these values ever come from user input or external sources
   const nameEl = document.createElement('strong');
   nameEl.textContent = order.customerName;
-  msg.querySelector('span').append(nameEl, ` ${order.expiredMessage}`);
+  msg.querySelector('.expired-message-text').append(nameEl, ` ${order.expiredMessage}`);
 
   const timer = setTimeout(() => msg.remove(), 10000);
   msg.querySelector('.expired-dismiss-btn').addEventListener('click', () => {
