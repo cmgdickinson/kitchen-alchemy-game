@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitchen Alchemy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/pantry.css">
+  <link rel="stylesheet" href="css/workspace.css">
+  <link rel="stylesheet" href="css/orders.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+
+  <header>
+    <h1>🍳 Kitchen Alchemy</h1>
+    <div class="header-right">
+      <span class="coins-display">💰 <span id="coins">0</span></span>
+      <button class="reset-btn" id="reset-btn" title="Reset game">↺</button>
+    </div>
+  </header>
+
+  <main class="game-layout">
+
+    <section class="pantry-panel">
+      <div class="panel-header">
+        <h2>🥫 Pantry</h2>
+        <div class="pantry-header-right">
+          <button class="hints-toggle-btn" id="hints-toggle-btn" title="Show undiscovered recipe count per ingredient">🔍 Hints</button>
+          <span class="panel-subtitle" id="pantry-count"></span>
+        </div>
+      </div>
+      <div class="ingredient-grid" id="ingredient-grid"></div>
+    </section>
+
+    <section class="workspace-panel">
+      <div class="panel-header">
+        <h2>🍴 Workspace</h2>
+      </div>
+      <div class="workspace-content">
+        <p class="workspace-instructions">Select 2–4 ingredients, then hit Combine.</p>
+        <div class="workspace-slots" id="workspace-slots">
+          <span class="workspace-hint">Click ingredients to add them here</span>
+        </div>
+        <div class="workspace-actions">
+          <button id="combine-btn" disabled>✨ Combine</button>
+          <button id="clear-btn">✕ Clear</button>
+        </div>
+        <div class="result-area" id="result-area"></div>
+      </div>
+    </section>
+
+    <section class="orders-panel">
+      <div class="panel-header">
+        <h2>📋 Orders</h2>
+        <span class="panel-subtitle" id="orders-completed">0 completed</span>
+      </div>
+      <div class="order-list" id="order-list"></div>
+    </section>
+
+  </main>
+
+  <div class="recipe-book-wrapper" id="recipe-book-wrapper">
+    <button class="recipe-book-toggle" id="recipe-book-toggle">
+      📖 Recipe Book &mdash; <span id="recipe-count">0</span> / <span id="recipe-total">0</span> discovered
+      <span class="toggle-arrow" id="toggle-arrow">▲</span>
+    </button>
+    <div class="recipe-book" id="recipe-book">
+      <div class="recipe-grid" id="recipe-grid"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="milestone-modal" hidden>
+    <div class="modal">
+      <div class="modal-emoji" id="modal-emoji"></div>
+      <h3 id="modal-title">New Ingredient Unlocked!</h3>
+      <p id="modal-message"></p>
+      <button id="modal-close">Let's cook!</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
