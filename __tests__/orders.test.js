@@ -87,7 +87,6 @@ describe('order system', () => {
         id:              expect.stringMatching(/^ord_\d+$/),
         customerName:    expect.any(String),
         recipeId:        expect.any(String),
-        resultId:        expect.any(String),
         name:            expect.any(String),
         emoji:           expect.any(String),
         reward:          expect.any(Number),

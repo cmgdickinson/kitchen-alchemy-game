@@ -31,7 +31,7 @@ export function setOrdersChangeHandler(fn) {
 }
 
 export function getActiveOrders() {
-  return _orders;
+  return [..._orders];
 }
 
 function getOrderableRecipes() {
@@ -69,7 +69,6 @@ function generateOrder() {
     id: `ord_${++_idCounter}`,
     customerName: randomFrom(CUSTOMER_NAMES),
     recipeId: recipe.id,
-    resultId: recipe.result,
     name: item.name,
     emoji: item.emoji,
     reward,
@@ -77,6 +76,11 @@ function generateOrder() {
     timeRemaining: timeLimit,
     expiredMessage: randomFrom(EXPIRED_MESSAGES),
   };
+}
+
+export function resetOrders() {
+  _orders = [];
+  _idCounter = 0;
 }
 
 export function tryFillOrders() {
@@ -109,18 +113,17 @@ export function fulfillOrder(orderId) {
 
 export function tickOrders() {
   const expired = [];
-  let changed = false;
+  const hadOrders = _orders.length > 0;
 
   for (let i = _orders.length - 1; i >= 0; i--) {
     _orders[i].timeRemaining -= 1;
-    changed = true;
     if (_orders[i].timeRemaining <= 0) {
       expired.push(_orders[i]);
       _orders.splice(i, 1);
     }
   }
 
-  if (changed) _onChanged?.(_orders);
+  if (hadOrders) _onChanged?.(_orders);
   if (expired.length > 0) setTimeout(tryFillOrders, 3500);
   return expired;
 }

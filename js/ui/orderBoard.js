@@ -3,12 +3,14 @@ export function renderOrderBoard(orders, discoveredRecipeIds) {
   if (!list) return;
 
   if (orders.length === 0) {
-    list.innerHTML = `
-      <div class="order-placeholder">
-        <span class="order-placeholder-emoji">🍽️</span>
-        Discover more recipes to<br>attract hungry customers!
-      </div>
-    `;
+    for (const card of list.querySelectorAll('.order-card')) card.remove();
+    if (!list.querySelector('.order-placeholder:not([data-expired])')) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'order-placeholder';
+      placeholder.innerHTML = `<span class="order-placeholder-emoji">🍽️</span>
+        Discover more recipes to<br>attract hungry customers!`;
+      list.appendChild(placeholder);
+    }
     return;
   }
 
@@ -56,12 +58,12 @@ export function renderOrderBoard(orders, discoveredRecipeIds) {
       card.dataset.orderId = order.id;
       card.innerHTML = `
         <div class="order-header">
-          <span class="order-customer">${order.customerName}</span>
+          <span class="order-customer"></span>
           <span class="order-reward">+💰${order.reward}</span>
         </div>
         <div class="order-dish">
-          <span class="order-dish-emoji">${order.emoji}</span>
-          <span class="order-dish-name">${order.name}</span>
+          <span class="order-dish-emoji"></span>
+          <span class="order-dish-name"></span>
         </div>
         <div class="order-timer-row">
           <div class="order-timer-bar">
@@ -76,6 +78,10 @@ export function renderOrderBoard(orders, discoveredRecipeIds) {
           }
         </div>
       `;
+      // Set via textContent to prevent XSS if these values ever come from user input or external sources
+      card.querySelector('.order-customer').textContent = order.customerName;
+      card.querySelector('.order-dish-emoji').textContent = order.emoji;
+      card.querySelector('.order-dish-name').textContent = order.name;
       list.appendChild(card);
     }
   }
@@ -92,10 +98,14 @@ export function showExpiredMessage(order) {
   msg.style.color = 'var(--danger)';
   msg.innerHTML = `
     <div class="expired-message-row">
-      <span><strong>${order.customerName}</strong> ${order.expiredMessage}</span>
+      <span></span>
       <button class="expired-dismiss-btn" title="Dismiss">✕</button>
     </div>
   `;
+  // Set via DOM methods to prevent XSS if these values ever come from user input or external sources
+  const nameEl = document.createElement('strong');
+  nameEl.textContent = order.customerName;
+  msg.querySelector('span').append(nameEl, ` ${order.expiredMessage}`);
 
   const timer = setTimeout(() => msg.remove(), 10000);
   msg.querySelector('.expired-dismiss-btn').addEventListener('click', () => {

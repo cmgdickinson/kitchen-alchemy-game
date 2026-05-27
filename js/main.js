@@ -3,7 +3,7 @@ import { tryRecipe, TOTAL_RECIPES } from './systems/combination.js';
 import { checkMilestones } from './systems/milestones.js';
 import {
   setOrdersChangeHandler, getActiveOrders,
-  tryFillOrders, fulfillOrder, startOrderTimer,
+  tryFillOrders, fulfillOrder, startOrderTimer, resetOrders,
 } from './systems/orders.js';
 import { INGREDIENTS } from './data/ingredients.js';
 import { RECIPES } from './data/recipes.js';
@@ -160,9 +160,6 @@ function handleCombine() {
       _milestoneQueue.push(...triggered);
       setTimeout(showNextMilestone, 800);
     }
-
-    // New discoveries may enable orders
-    tryFillOrders();
   }
 
   showSuccess(recipe, resultItem, isNew);
@@ -170,6 +167,8 @@ function handleCombine() {
 
   fullRedraw(_newItems);
   _newItems = [];
+
+  if (isNew && getActiveOrders().length === 0) tryFillOrders();
 }
 
 // ── Orders ────────────────────────────────────────────────────────────────────
@@ -186,12 +185,14 @@ function handleFulfill(orderId) {
   }
 
   spawnCoinFloat(order.reward);
-  fullRedraw();
+  const state = getState();
+  renderOrderBoard(getActiveOrders(), state.discoveredRecipes);
+  updateCoins();
+  updateOrdersCompleted();
 }
 
 function handleOrderExpired(expired) {
   for (const order of expired) showExpiredMessage(order);
-  fullRedraw();
 }
 
 // ── Recipe book toggle ────────────────────────────────────────────────────────
@@ -211,6 +212,7 @@ function toggleRecipeBook() {
 function handleReset() {
   if (!confirm('Reset all progress? This cannot be undone.')) return;
   resetState();
+  resetOrders();
   _selected = [];
   _newItems  = [];
   _milestoneQueue = [];
