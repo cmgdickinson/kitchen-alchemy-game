@@ -185,6 +185,9 @@ function handleFulfill(orderId) {
   renderOrderBoard(getActiveOrders(), state.discoveredRecipes);
   updateCoins();
   updateOrdersCompleted();
+  if (triggered.length > 0) {
+    renderPantry(state.unlockedItems, _selected, triggered.map(m => m.reward.id), currentHintCounts());
+  }
 }
 
 function handleOrderExpired(expired) {
