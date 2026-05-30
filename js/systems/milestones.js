@@ -7,25 +7,25 @@ export function checkMilestones() {
 
   for (const milestone of MILESTONES) {
     if (state.triggeredMilestones.includes(milestone.id)) continue;
-
     const { type, count } = milestone.condition;
     const met =
       type === 'discoveries' ? state.discoveredRecipes.length >= count :
       type === 'orders'      ? state.completedOrders >= count :
       false;
-
     if (met) {
       triggered.push(milestone);
-      const newUnlocked = [...state.unlockedItems];
-      if (!newUnlocked.includes(milestone.reward.id)) {
-        newUnlocked.push(milestone.reward.id);
+      state.triggeredMilestones.push(milestone.id);
+      if (!state.unlockedItems.includes(milestone.reward.id)) {
+        state.unlockedItems.push(milestone.reward.id);
       }
-      setState({
-        unlockedItems: newUnlocked,
-        triggeredMilestones: [...state.triggeredMilestones, milestone.id],
-      });
     }
   }
 
+  if (triggered.length > 0) {
+    setState({
+      unlockedItems: state.unlockedItems,
+      triggeredMilestones: state.triggeredMilestones,
+    });
+  }
   return triggered;
 }

@@ -26,7 +26,7 @@ export function loadState() {
 }
 
 export function getState() {
-  return _state;
+  return structuredClone(_state);
 }
 
 export function setState(patch) {

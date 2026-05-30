@@ -91,10 +91,6 @@ describe('state system', () => {
       expect(typeof getState()).toBe('object');
     });
 
-    test('subsequent calls return the same object reference', () => {
-      loadState();
-      expect(getState()).toBe(getState());
-    });
   });
 
   // ── setState ────────────────────────────────────────────────────────────────
