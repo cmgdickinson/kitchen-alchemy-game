@@ -10,7 +10,7 @@ export function renderRecipeBook(discoveredRecipeIds) {
   grid.innerHTML = '';
 
   for (const recipe of RECIPES) {
-    const isDiscovered = discoveredRecipeIds.includes(recipe.id);
+    const isDiscovered = discoveredRecipeIds.includes(recipe.result);
     const card = document.createElement('div');
     card.className = 'recipe-card';
 
@@ -23,7 +23,7 @@ export function renderRecipeBook(discoveredRecipeIds) {
       card.innerHTML = `
         <div class="recipe-card-header">
           <span class="recipe-card-emoji">${result?.emoji ?? '❓'}</span>
-          <span class="recipe-card-name">${result?.name ?? recipe.id}</span>
+          <span class="recipe-card-name">${result?.name ?? recipe.result}</span>
         </div>
         <div class="recipe-card-ingredients">${ingredientNames}</div>
         <div class="recipe-card-desc">${recipe.description}</div>

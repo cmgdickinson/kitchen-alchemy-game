@@ -37,7 +37,7 @@ export function getActiveOrders() {
 function getOrderableRecipes() {
   const { discoveredRecipes } = getState();
   return discoveredRecipes
-    .map(id => RECIPES.find(r => r.id === id))
+    .map(id => RECIPES.find(r => r.result === id))
     .filter(r => r && INGREDIENTS[r.result]?.orderable);
 }
 
@@ -59,7 +59,7 @@ function generateOrder() {
 
   // Avoid duplicating an already-active recipe if possible
   const existing = new Set(_orders.map(o => o.recipeId));
-  const pool = orderable.filter(r => !existing.has(r.id));
+  const pool = orderable.filter(r => !existing.has(r.result));
   const recipe = pool.length > 0 ? randomFrom(pool) : randomFrom(orderable);
 
   const item = INGREDIENTS[recipe.result];
@@ -69,7 +69,7 @@ function generateOrder() {
   return {
     id: `ord_${++_idCounter}`,
     customerName: randomFrom(CUSTOMER_NAMES),
-    recipeId: recipe.id,
+    recipeId: recipe.result,
     name: item.name,
     emoji: item.emoji,
     reward,

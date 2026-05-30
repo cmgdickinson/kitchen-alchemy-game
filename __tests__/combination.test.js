@@ -27,7 +27,7 @@ describe('tryRecipe', () => {
   test('finds a two-ingredient recipe', () => {
     const result = tryRecipe(['egg', 'butter']);
     expect(result).not.toBeNull();
-    expect(result.id).toBe('scrambled_eggs');
+    expect(result.result).toBe('scrambled_eggs');
   });
 
   test('matching is order-agnostic for two ingredients', () => {
@@ -35,13 +35,13 @@ describe('tryRecipe', () => {
     const ba = tryRecipe(['butter', 'egg']);
     expect(ab).not.toBeNull();
     expect(ba).not.toBeNull();
-    expect(ab.id).toBe(ba.id);
+    expect(ab.result).toBe(ba.result);
   });
 
   test('finds a three-ingredient recipe', () => {
     const result = tryRecipe(['flour', 'egg', 'milk']);
     expect(result).not.toBeNull();
-    expect(result.id).toBe('batter');
+    expect(result.result).toBe('batter');
   });
 
   test('matching is order-agnostic for three ingredients', () => {
@@ -51,7 +51,7 @@ describe('tryRecipe', () => {
       ['milk', 'flour', 'egg'],
       ['flour', 'milk', 'egg'],
     ];
-    const ids = combos.map(c => tryRecipe(c)?.id);
+    const ids = combos.map(c => tryRecipe(c)?.result);
     expect(new Set(ids).size).toBe(1);
     expect(ids[0]).toBe('batter');
   });
@@ -59,27 +59,26 @@ describe('tryRecipe', () => {
   test('finds a four-ingredient recipe', () => {
     const result = tryRecipe(['flour', 'water', 'salt', 'yeast']);
     expect(result).not.toBeNull();
-    expect(result.id).toBe('bread');
+    expect(result.result).toBe('bread');
   });
 
   test('matching is order-agnostic for four ingredients', () => {
     const r1 = tryRecipe(['flour', 'water', 'salt', 'yeast']);
     const r2 = tryRecipe(['yeast', 'salt', 'water', 'flour']);
-    expect(r1.id).toBe(r2.id);
+    expect(r1.result).toBe(r2.result);
   });
 
   test('every recipe defined in RECIPES is discoverable', () => {
     for (const recipe of RECIPES) {
       const found = tryRecipe(recipe.ingredients);
       expect(found).not.toBeNull();
-      expect(found.id).toBe(recipe.id);
+      expect(found.result).toBe(recipe.result);
     }
   });
 
   test('returns the full recipe object with description on a hit', () => {
     const result = tryRecipe(['sugar', 'butter']);
     expect(result).toMatchObject({
-      id: 'caramel',
       result: 'caramel',
       description: expect.any(String),
       ingredients: expect.arrayContaining(['sugar', 'butter']),

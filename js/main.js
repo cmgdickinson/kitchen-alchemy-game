@@ -47,7 +47,7 @@ function updateOrdersCompleted() {
 function computeHintCounts(discoveredRecipes) {
   const counts = {};
   for (const recipe of RECIPES) {
-    if (!discoveredRecipes.includes(recipe.id)) {
+    if (!discoveredRecipes.includes(recipe.result)) {
       for (const ing of recipe.ingredients) {
         counts[ing] = (counts[ing] ?? 0) + 1;
       }
@@ -135,7 +135,7 @@ function handleCombine() {
   }
 
   const state = getState();
-  const isNew = !state.discoveredRecipes.includes(recipe.id);
+  const isNew = !state.discoveredRecipes.includes(recipe.result);
   const resultItem = INGREDIENTS[recipe.result];
 
   if (isNew) {
@@ -146,7 +146,7 @@ function handleCombine() {
       _newItems = [recipe.result];
     }
     setState({
-      discoveredRecipes: [...state.discoveredRecipes, recipe.id],
+      discoveredRecipes: [...state.discoveredRecipes, recipe.result],
       unlockedItems: newUnlocked,
     });
 

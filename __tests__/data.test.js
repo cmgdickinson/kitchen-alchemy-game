@@ -57,7 +57,7 @@ describe('RECIPES', () => {
     for (const recipe of RECIPES) {
       const key = recipe.ingredients.slice().sort().join('|');
       expect(seen.has(key)).toBe(false);
-      seen.set(key, recipe.id);
+      seen.set(key, recipe.result);
     }
   });
 
@@ -70,12 +70,6 @@ describe('RECIPES', () => {
   test('every recipe requires at most 4 ingredients', () => {
     for (const recipe of RECIPES) {
       expect(recipe.ingredients.length).toBeLessThanOrEqual(4);
-    }
-  });
-
-  test('recipe id matches its result id', () => {
-    for (const recipe of RECIPES) {
-      expect(recipe.id).toBe(recipe.result);
     }
   });
 
