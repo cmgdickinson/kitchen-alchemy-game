@@ -186,7 +186,7 @@ function handleFulfill(orderId) {
   updateCoins();
   updateOrdersCompleted();
   if (triggered.length > 0) {
-    renderPantry(state.unlockedItems, _selected, triggered.map(m => m.reward.id), currentHintCounts());
+    renderPantry(state.unlockedItems, _selected, triggered.map(m => m.reward), currentHintCounts());
   }
 }
 

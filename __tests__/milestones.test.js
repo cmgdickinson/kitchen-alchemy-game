@@ -139,7 +139,7 @@ describe('milestone system', () => {
       title: expect.any(String),
       emoji: expect.any(String),
       message: expect.any(String),
-      reward: expect.objectContaining({ id: expect.any(String) }),
+      reward: expect.any(String),
     });
   });
 });

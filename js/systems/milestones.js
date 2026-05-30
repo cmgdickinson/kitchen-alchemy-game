@@ -15,8 +15,8 @@ export function checkMilestones() {
     if (met) {
       triggered.push(milestone);
       state.triggeredMilestones.push(milestone.id);
-      if (!state.unlockedItems.includes(milestone.reward.id)) {
-        state.unlockedItems.push(milestone.reward.id);
+      if (!state.unlockedItems.includes(milestone.reward)) {
+        state.unlockedItems.push(milestone.reward);
       }
     }
   }

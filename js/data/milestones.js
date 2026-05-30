@@ -1,8 +1,15 @@
+// Each milestone: { id, condition, reward, title, emoji, message }
+// condition: { type: 'discoveries' | 'orders', count }
+// reward: ingredient id string
+
 export const MILESTONES = [
+
+  // ── Discovery milestones ──────────────────────────────────────
+
   {
     id: 'unlock_yeast',
     condition: { type: 'discoveries', count: 3 },
-    reward: { type: 'ingredient', id: 'yeast' },
+    reward: 'yeast',
     title: 'Something Alive!',
     emoji: '🧫',
     message: "A mysterious jar has appeared in your pantry. It's bubbling. It smells... alive. It IS alive. That's just yeast. Probably.",
@@ -10,39 +17,23 @@ export const MILESTONES = [
   {
     id: 'unlock_vanilla',
     condition: { type: 'discoveries', count: 7 },
-    reward: { type: 'ingredient', id: 'vanilla' },
+    reward: 'vanilla',
     title: 'Vanilla Extract Unlocked!',
     emoji: '🌿',
     message: "A tiny brown bottle appeared on your shelf. It costs more per millilitre than most perfumes. It smells like a hug. Worth every penny.",
   },
   {
-    id: 'unlock_baking_powder',
-    condition: { type: 'orders', count: 3 },
-    reward: { type: 'ingredient', id: 'baking_powder' },
-    title: 'Baking Powder Unlocked!',
-    emoji: '🥄',
-    message: "Customers rave about your cooking. A small tin arrived as thanks. It's just powder, but it punches well above its weight class.",
-  },
-  {
     id: 'unlock_chocolate',
     condition: { type: 'discoveries', count: 12 },
-    reward: { type: 'ingredient', id: 'chocolate' },
+    reward: 'chocolate',
     title: 'Chocolate Unlocked!',
     emoji: '🍫',
     message: "The greatest discovery since fire. Possibly greater than fire. Your pantry will never be the same. Neither will you.",
   },
   {
-    id: 'unlock_cinnamon',
-    condition: { type: 'orders', count: 8 },
-    reward: { type: 'ingredient', id: 'cinnamon' },
-    title: 'Cinnamon Unlocked!',
-    emoji: '🫚',
-    message: "The scent of autumn in a jar. Regulars have been requesting it. Apparently it was also a viral challenge once. We don't talk about that.",
-  },
-  {
     id: 'unlock_cheese',
     condition: { type: 'discoveries', count: 20 },
-    reward: { type: 'ingredient', id: 'cheese' },
+    reward: 'cheese',
     title: 'Cheese Unlocked!',
     emoji: '🧀',
     message: "Aged, mysterious, and slightly terrifying. Some of the greatest culinary minds in history have pondered cheese. Now it's yours.",
@@ -50,15 +41,34 @@ export const MILESTONES = [
   {
     id: 'unlock_cream',
     condition: { type: 'discoveries', count: 26 },
-    reward: { type: 'ingredient', id: 'cream' },
+    reward: 'cream',
     title: 'Cream Unlocked!',
     emoji: '🫙',
     message: "Milk that got a promotion. Rich, silky, and deeply pleased with itself. It makes everything it touches more luxurious.",
   },
+
+  // ── Order milestones ──────────────────────────────────────────
+
+  {
+    id: 'unlock_baking_powder',
+    condition: { type: 'orders', count: 3 },
+    reward: 'baking_powder',
+    title: 'Baking Powder Unlocked!',
+    emoji: '🥄',
+    message: "Customers rave about your cooking. A small tin arrived as thanks. It's just powder, but it punches well above its weight class.",
+  },
+  {
+    id: 'unlock_cinnamon',
+    condition: { type: 'orders', count: 8 },
+    reward: 'cinnamon',
+    title: 'Cinnamon Unlocked!',
+    emoji: '🫚',
+    message: "The scent of autumn in a jar. Regulars have been requesting it. Apparently it was also a viral challenge once. We don't talk about that.",
+  },
   {
     id: 'unlock_lemon',
     condition: { type: 'orders', count: 15 },
-    reward: { type: 'ingredient', id: 'lemon' },
+    reward: 'lemon',
     title: 'Lemon Unlocked!',
     emoji: '🍋',
     message: "Sour, yellow, and judgmental. Your loyal customers pooled together to send you this gift. A wonderful addition to almost everything.",

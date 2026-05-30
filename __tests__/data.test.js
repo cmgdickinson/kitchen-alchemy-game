@@ -88,13 +88,13 @@ describe('MILESTONES', () => {
 
   test('every milestone reward ID exists in INGREDIENTS', () => {
     for (const milestone of MILESTONES) {
-      expect(INGREDIENTS[milestone.reward.id]).toBeDefined();
+      expect(INGREDIENTS[milestone.reward]).toBeDefined();
     }
   });
 
   test('every milestone reward ingredient is of unlockType milestone', () => {
     for (const milestone of MILESTONES) {
-      expect(INGREDIENTS[milestone.reward.id].unlockType).toBe('milestone');
+      expect(INGREDIENTS[milestone.reward].unlockType).toBe('milestone');
     }
   });
 
@@ -122,7 +122,7 @@ describe('MILESTONES', () => {
   });
 
   test('each milestone unlocks a different ingredient', () => {
-    const rewardIds = MILESTONES.map(m => m.reward.id);
+    const rewardIds = MILESTONES.map(m => m.reward);
     expect(new Set(rewardIds).size).toBe(rewardIds.length);
   });
 });
