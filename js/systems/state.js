@@ -10,7 +10,7 @@ const DEFAULT_STATE = {
 
 const STORAGE_KEY = 'kitchen-alchemy-v1';
 
-let _state = null;
+let _state = structuredClone(DEFAULT_STATE);
 
 export function loadState() {
   try {
@@ -21,7 +21,9 @@ export function loadState() {
       _state = { ...DEFAULT_STATE, ...parsed };
       return;
     }
-  } catch (_) {}
+  } catch (e) {
+    console.error('Failed to load state from localStorage:', e);
+  }
   _state = structuredClone(DEFAULT_STATE);
 }
 
@@ -33,12 +35,16 @@ export function setState(patch) {
   Object.assign(_state, patch);
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(_state));
-  } catch (_) {}
+  } catch (e) {
+    console.error('Failed to save state to localStorage:', e);
+  }
 }
 
 export function resetState() {
   _state = structuredClone(DEFAULT_STATE);
   try {
     localStorage.removeItem(STORAGE_KEY);
-  } catch (_) {}
+  } catch (e) {
+    console.error('Failed to remove state from localStorage:', e);
+  }
 }

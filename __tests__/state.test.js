@@ -81,14 +81,11 @@ describe('state system', () => {
   // ── getState ────────────────────────────────────────────────────────────────
 
   describe('getState', () => {
-    test('returns null before loadState is called', () => {
-      expect(getState()).toBeNull();
-    });
-
-    test('returns the state object after loadState', () => {
-      loadState();
-      expect(getState()).not.toBeNull();
-      expect(typeof getState()).toBe('object');
+    test('returns a default state object before loadState is called', () => {
+      const state = getState();
+      expect(state.coins).toBe(0);
+      expect(state.discoveredRecipes).toEqual([]);
+      expect(typeof state).toBe('object');
     });
 
   });
