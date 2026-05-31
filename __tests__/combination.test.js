@@ -1,4 +1,4 @@
-const { tryRecipe, TOTAL_RECIPES } = require('../js/systems/combination');
+const { tryRecipe } = require('../js/systems/combination');
 const { RECIPES } = require('../js/data/recipes');
 
 describe('tryRecipe', () => {
@@ -83,16 +83,5 @@ describe('tryRecipe', () => {
       description: expect.any(String),
       ingredients: expect.arrayContaining(['sugar', 'butter']),
     });
-  });
-});
-
-describe('TOTAL_RECIPES', () => {
-  test('equals the number of entries in RECIPES', () => {
-    expect(TOTAL_RECIPES).toBe(RECIPES.length);
-  });
-
-  test('is a positive integer', () => {
-    expect(Number.isInteger(TOTAL_RECIPES)).toBe(true);
-    expect(TOTAL_RECIPES).toBeGreaterThan(0);
   });
 });

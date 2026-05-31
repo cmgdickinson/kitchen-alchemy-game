@@ -1,5 +1,5 @@
 import { loadState, getState, setState, resetState } from './systems/state.js';
-import { tryRecipe, TOTAL_RECIPES } from './systems/combination.js';
+import { tryRecipe } from './systems/combination.js';
 import { checkMilestones } from './systems/milestones.js';
 import {
   setOrdersChangeHandler, getActiveOrders,
