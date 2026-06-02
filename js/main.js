@@ -46,8 +46,9 @@ function updateOrdersCompleted() {
 
 function computeHintCounts(discoveredRecipes) {
   const counts = {};
+  const discoveredSet = new Set(discoveredRecipes); // O(1) lookup per recipe vs O(n) with array.includes
   for (const recipe of RECIPES) {
-    if (!discoveredRecipes.includes(recipe.result)) {
+    if (!discoveredSet.has(recipe.result)) {
       for (const ing of recipe.ingredients) {
         counts[ing] = (counts[ing] ?? 0) + 1;
       }
@@ -135,13 +136,15 @@ function handleCombine() {
   }
 
   const state = getState();
-  const isNew = !state.discoveredRecipes.includes(recipe.result);
+  const discoveredSet = new Set(state.discoveredRecipes); // O(1) lookup vs O(n) with array.includes
+  const unlockedSet = new Set(state.unlockedItems);       // O(1) lookup vs O(n) with array.includes
+  const isNew = !discoveredSet.has(recipe.result);
   const resultItem = INGREDIENTS[recipe.result];
 
   if (isNew) {
     // Unlock the result item and record the discovery
     const newUnlocked = [...state.unlockedItems];
-    if (!newUnlocked.includes(recipe.result)) {
+    if (!unlockedSet.has(recipe.result)) {
       newUnlocked.push(recipe.result);
       _newItems = [recipe.result];
     }
