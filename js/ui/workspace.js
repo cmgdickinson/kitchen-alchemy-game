@@ -7,11 +7,10 @@ export function renderWorkspace(selectedIds) {
   const combineBtn = document.getElementById('combine-btn');
   if (!slotsEl || !combineBtn) return;
 
-  slotsEl.innerHTML = '';
-
   if (selectedIds.length === 0) {
     slotsEl.innerHTML = '<span class="workspace-hint">Click ingredients to add them here</span>';
   } else {
+    slotsEl.innerHTML = '';
     for (const id of selectedIds) {
       const item = INGREDIENTS[id];
       if (!item) continue;
@@ -19,10 +18,14 @@ export function renderWorkspace(selectedIds) {
       const slot = document.createElement('div');
       slot.className = 'workspace-slot';
       slot.innerHTML = `
-        <span class="slot-emoji">${item.emoji}</span>
-        <span>${item.name}</span>
-        <button class="workspace-slot-remove" data-remove-id="${id}" title="Remove">×</button>
+        <span class="slot-emoji"></span>
+        <span class="slot-name"></span>
+        <button class="workspace-slot-remove" title="Remove">×</button>
       `;
+      // Set via textContent/dataset to prevent XSS if these values ever come from user input or external sources
+      slot.querySelector('.slot-emoji').textContent = item.emoji;
+      slot.querySelector('.slot-name').textContent = item.name;
+      slot.querySelector('.workspace-slot-remove').dataset.removeId = id;
       slotsEl.appendChild(slot);
     }
   }
@@ -41,15 +44,19 @@ export function showSuccess(recipe, resultItem, isNew) {
   area.innerHTML = `
     <div class="result-card ${isNew ? '' : 'already-known'}">
       <div class="result-card-top">
-        <span class="result-card-emoji">${resultItem.emoji}</span>
-        <span class="result-card-name">${resultItem.name}</span>
+        <span class="result-card-emoji"></span>
+        <span class="result-card-name"></span>
         <span class="result-card-tag ${tagClass}">${tag}</span>
       </div>
-      <p class="result-card-desc">${recipe.description}</p>
+      <p class="result-card-desc"></p>
     </div>
   `;
+  // Set via textContent to prevent XSS if these values ever come from user input or external sources
+  area.querySelector('.result-card-emoji').textContent = resultItem.emoji;
+  area.querySelector('.result-card-name').textContent = resultItem.name;
+  area.querySelector('.result-card-desc').textContent = recipe.description;
 
-  _resultClearTimer = setTimeout(() => { area.innerHTML = ''; }, 5000);
+  _resultClearTimer = setTimeout(() => { area.innerHTML = ''; }, 10000);
 }
 
 export function showFailure(message) {
@@ -59,9 +66,11 @@ export function showFailure(message) {
 
   area.innerHTML = `
     <div class="result-card failure">
-      <p class="result-card-desc">${message}</p>
+      <p class="result-card-desc"></p>
     </div>
   `;
+  // Set via textContent to prevent XSS if these values ever come from user input or external sources
+  area.querySelector('.result-card-desc').textContent = message;
 
   _resultClearTimer = setTimeout(() => { area.innerHTML = ''; }, 4000);
 }
