@@ -52,6 +52,11 @@ describe('RECIPES', () => {
     }
   });
 
+  test('every recipe result ID is unique — no two recipes produce the same ingredient', () => {
+    const results = RECIPES.map(r => r.result);
+    expect(new Set(results).size).toBe(results.length);
+  });
+
   test('no two recipes share the same sorted ingredient combination', () => {
     const seen = new Map();
     for (const recipe of RECIPES) {

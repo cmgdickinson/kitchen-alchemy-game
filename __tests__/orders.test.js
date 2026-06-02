@@ -56,6 +56,13 @@ describe('order system', () => {
       expect(ordersModule.getActiveOrders()).toHaveLength(3);
     });
 
+    test('does not duplicate recipe IDs when enough distinct orderable recipes exist', () => {
+      stateModule.setState({ discoveredRecipes: ORDERABLE_RECIPES }); // 5 orderable recipes, 3 slots
+      ordersModule.tryFillOrders();
+      const recipeIds = ordersModule.getActiveOrders().map(o => o.recipeId);
+      expect(new Set(recipeIds).size).toBe(recipeIds.length);
+    });
+
     test('does not exceed 3 slots even when called multiple times', () => {
       stateModule.setState({ discoveredRecipes: ORDERABLE_RECIPES });
       ordersModule.tryFillOrders();
@@ -138,6 +145,26 @@ describe('order system', () => {
       stateModule.setState({ discoveredRecipes: fourteenOrderable });
       ordersModule.tryFillOrders();
       expect(ordersModule.getActiveOrders()[0].timeLimit).toBe(52);
+    });
+  });
+
+  // ── resetOrders ───────────────────────────────────────────────────────────
+
+  describe('resetOrders', () => {
+    test('clears all active orders', () => {
+      stateModule.setState({ discoveredRecipes: ORDERABLE_RECIPES });
+      ordersModule.tryFillOrders();
+      expect(ordersModule.getActiveOrders().length).toBeGreaterThan(0);
+      ordersModule.resetOrders();
+      expect(ordersModule.getActiveOrders()).toHaveLength(0);
+    });
+
+    test('resets the ID counter so new orders restart from ord_1', () => {
+      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      ordersModule.tryFillOrders();
+      ordersModule.resetOrders();
+      ordersModule.tryFillOrders();
+      expect(ordersModule.getActiveOrders()[0].id).toBe('ord_1');
     });
   });
 

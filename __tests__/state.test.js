@@ -88,6 +88,14 @@ describe('state system', () => {
       expect(typeof state).toBe('object');
     });
 
+    test('returns a clone — mutating the result does not affect internal state', () => {
+      loadState();
+      const state = getState();
+      state.discoveredRecipes.push('scrambled_eggs');
+      state.coins = 999;
+      expect(getState().discoveredRecipes).toEqual([]);
+      expect(getState().coins).toBe(0);
+    });
   });
 
   // ── setState ────────────────────────────────────────────────────────────────
