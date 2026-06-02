@@ -53,7 +53,7 @@ export function renderPantry(unlockedItems, selectedIds = [], newItemIds = [], h
 
   // Remove cards for items no longer in unlockedItems (e.g. after a reset)
   if (cardCache.size > unlockedItems.length) {
-    const unlockedSet = new Set(unlockedItems);
+    const unlockedSet = new Set(unlockedItems); // O(1) lookup per card vs O(n) with array.includes
     for (const [id, { card }] of cardCache) {
       if (!unlockedSet.has(id)) {
         card.remove();

@@ -17,7 +17,7 @@ export function renderOrderBoard(orders, discoveredRecipeIds) {
   list.querySelector('.order-placeholder:not([data-expired])')?.remove();
 
   // Remove cards for orders that are no longer active
-  const activeIds = new Set(orders.map(o => o.id));
+  const activeIds = new Set(orders.map(o => o.id)); // O(1) lookup per card vs O(n) with array.includes
   for (const card of list.querySelectorAll('.order-card')) {
     if (!activeIds.has(card.dataset.orderId)) card.remove();
   }

@@ -3,18 +3,19 @@ import { INGREDIENTS } from '../data/ingredients.js';
 
 export function renderRecipeBook(discoveredRecipeIds) {
   const grid = document.getElementById('recipe-grid');
+  if (!grid) return;
+
   const countEl = document.getElementById('recipe-count');
   const totalEl = document.getElementById('recipe-total');
-  if (!grid) return;
 
   grid.innerHTML = '';
 
+  const discoveredSet = new Set(discoveredRecipeIds); // O(1) lookup per recipe vs O(n) with array.includes
   for (const recipe of RECIPES) {
-    const isDiscovered = discoveredRecipeIds.includes(recipe.result);
     const card = document.createElement('div');
     card.className = 'recipe-card';
 
-    if (isDiscovered) {
+    if (discoveredSet.has(recipe.result)) {
       const result = INGREDIENTS[recipe.result];
       const ingredientNames = recipe.ingredients
         .map(id => INGREDIENTS[id]?.name ?? id)
@@ -22,14 +23,19 @@ export function renderRecipeBook(discoveredRecipeIds) {
 
       card.innerHTML = `
         <div class="recipe-card-header">
-          <span class="recipe-card-emoji">${result?.emoji ?? '❓'}</span>
-          <span class="recipe-card-name">${result?.name ?? recipe.result}</span>
+          <span class="recipe-card-emoji"></span>
+          <span class="recipe-card-name"></span>
         </div>
-        <div class="recipe-card-ingredients">${ingredientNames}</div>
-        <div class="recipe-card-desc">${recipe.description}</div>
+        <div class="recipe-card-ingredients"></div>
+        <div class="recipe-card-desc"></div>
       `;
+      // Set via textContent to prevent XSS if these values ever come from user input or external sources
+      card.querySelector('.recipe-card-emoji').textContent = result?.emoji ?? '❓';
+      card.querySelector('.recipe-card-name').textContent = result?.name ?? recipe.result;
+      card.querySelector('.recipe-card-ingredients').textContent = ingredientNames;
+      card.querySelector('.recipe-card-desc').textContent = recipe.description;
     } else {
-      card.style.opacity = '0.45';
+      card.classList.add('undiscovered');
       card.innerHTML = `
         <div class="recipe-card-header">
           <span class="recipe-card-emoji">❓</span>
@@ -42,6 +48,6 @@ export function renderRecipeBook(discoveredRecipeIds) {
     grid.appendChild(card);
   }
 
-  if (countEl) countEl.textContent = discoveredRecipeIds.length;
+  if (countEl) countEl.textContent = discoveredSet.size;
   if (totalEl) totalEl.textContent = RECIPES.length;
 }
