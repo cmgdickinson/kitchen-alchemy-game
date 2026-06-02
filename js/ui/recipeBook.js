@@ -11,7 +11,9 @@ export function renderRecipeBook(discoveredRecipeIds) {
   grid.innerHTML = '';
 
   const discoveredSet = new Set(discoveredRecipeIds); // O(1) lookup per recipe vs O(n) with array.includes
-  for (const recipe of RECIPES) {
+  // true (1) − false (0) = 1 sorts b before a, so discovered recipes float to the top
+  const sortedRecipes = [...RECIPES].sort((a, b) => discoveredSet.has(b.result) - discoveredSet.has(a.result));
+  for (const recipe of sortedRecipes) {
     const card = document.createElement('div');
     card.className = 'recipe-card';
 
