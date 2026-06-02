@@ -155,6 +155,7 @@ function handleCombine() {
     if (triggered.length > 0) {
       _milestoneQueue.push(...triggered);
       setTimeout(showNextMilestone, 800);
+      _newItems.push(...triggered.map(m => m.reward));
     }
   }
 

@@ -94,6 +94,10 @@
   pointer-events: none;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .pantry-header-right {
   display: flex;
   align-items: center;
