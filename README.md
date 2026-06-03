@@ -28,7 +28,7 @@ python3 -m http.server 8000
 npx serve
 ```
 
-Then open `http://localhost:8000` (or whatever port your server reports) in a browser.
+Then open the URL the server prints (usually `http://localhost:8000` for Python or `http://localhost:3000` for serve) in a browser.
 
 ## Running the tests
 
@@ -65,3 +65,7 @@ The `data → systems → ui → main.js` dependency direction is one-way: data 
 - **No frameworks.** Pure ES modules, native DOM APIs, plain CSS. There's no build step and no bundler.
 - **Persistent.** Game state is saved to `localStorage` on every change, and restored on page load.
 - **Lightly judgmental.** Failure messages, expired-customer messages, and recipe descriptions are the main reward for play.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
