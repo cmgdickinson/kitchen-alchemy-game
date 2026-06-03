@@ -1,7 +1,7 @@
 {
   "name": "cookinggame",
   "version": "1.0.0",
-  "description": "",
+  "description": "Browser-based ingredient-combination game with a recipe book, customer orders, and unlockable ingredients. Vanilla JS, no frameworks.",
   "main": "index.js",
   "scripts": {
     "test": "jest"
