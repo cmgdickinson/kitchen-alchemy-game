@@ -1,15 +1,43 @@
+import { INGREDIENTS } from '../data/ingredients.js';
+
+// Placeholder text for the two empty-board situations. Hard-coded HTML, no
+// dynamic data — see XSS convention note in pantry.js for why innerHTML is
+// acceptable here but not for ingredient/customer names.
+const NO_ORDERABLE_RECIPES_MSG =
+  '<span class="order-placeholder-emoji">🍽️</span> Discover more recipes to<br>attract hungry customers!';
+const REFILL_COMING_MSG =
+  '<span class="order-placeholder-emoji">👀</span> Word travels fast. A new<br>customer is already on the way...';
+
 export function renderOrderBoard(orders, discoveredRecipeIds) {
   const list = document.getElementById('order-list');
   if (!list) return;
 
   if (orders.length === 0) {
     for (const card of list.querySelectorAll('.order-card')) card.remove();
-    if (!list.querySelector('.order-placeholder:not([data-expired])')) {
-      const placeholder = document.createElement('div');
+
+    // Pick the right placeholder. If the player has discovered at least one
+    // orderable recipe, the orders queue is briefly empty between a fulfill/expiry
+    // and the refill timer firing (2.5s / 3.5s later) — so tell them more is on
+    // the way. Otherwise, customers genuinely can't arrive until they unlock
+    // their first orderable recipe.
+    //
+    // .some(...) returns true as soon as it finds an element matching the
+    // callback, and false if none do. The `?.` (optional chaining) on
+    // INGREDIENTS[id]?.orderable returns undefined instead of throwing if the
+    // id somehow isn't in INGREDIENTS — defensive against stale save data.
+    const refillComing = discoveredRecipeIds.some(id => INGREDIENTS[id]?.orderable);
+    const html = refillComing ? REFILL_COMING_MSG : NO_ORDERABLE_RECIPES_MSG;
+
+    // Reuse the existing placeholder element if it's there (avoid flicker), and
+    // update its content in case the situation flipped since the last render
+    // (e.g. the player just discovered their first orderable recipe).
+    let placeholder = list.querySelector('.order-placeholder:not([data-expired])');
+    if (!placeholder) {
+      placeholder = document.createElement('div');
       placeholder.className = 'order-placeholder';
-      placeholder.innerHTML = '<span class="order-placeholder-emoji">🍽️</span> Discover more recipes to<br>attract hungry customers!';
       list.appendChild(placeholder);
     }
+    if (placeholder.innerHTML !== html) placeholder.innerHTML = html;
     return;
   }
 
@@ -75,7 +103,7 @@ export function renderOrderBoard(orders, discoveredRecipeIds) {
           }
         </div>
       `;
-      // Set via textContent to prevent XSS if these values ever come from user input or external sources
+      // textContent — prevents XSS (convention note in pantry.js)
       card.querySelector('.order-customer').textContent = order.customerName;
       card.querySelector('.order-dish-emoji').textContent = order.emoji;
       card.querySelector('.order-dish-name').textContent = order.name;
@@ -90,16 +118,17 @@ export function showExpiredMessage(order) {
 
   const msg = document.createElement('div');
   msg.className = 'order-placeholder';
+  // data-expired both tags this element so renderOrderBoard's selector can skip
+  // it when looking for the empty-state placeholder, and triggers the danger
+  // colour rule in orders.css.
   msg.dataset.expired = 'true';
-  msg.style.borderColor = 'var(--danger)';
-  msg.style.color = 'var(--danger)';
   msg.innerHTML = `
     <div class="expired-message-row">
       <span class="expired-message-text"></span>
       <button class="expired-dismiss-btn" title="Dismiss">✕</button>
     </div>
   `;
-  // Set via DOM methods to prevent XSS if these values ever come from user input or external sources
+  // createElement + textContent — prevents XSS (convention note in pantry.js)
   const nameEl = document.createElement('strong');
   nameEl.textContent = order.customerName;
   msg.querySelector('.expired-message-text').append(nameEl, ` ${order.expiredMessage}`);

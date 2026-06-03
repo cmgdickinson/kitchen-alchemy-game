@@ -88,11 +88,16 @@ describe('state system', () => {
       expect(typeof state).toBe('object');
     });
 
-    test('returns a clone — mutating the result does not affect internal state', () => {
+    test('returns a frozen reference — mutations throw and leave internal state intact', () => {
       loadState();
       const state = getState();
-      state.discoveredRecipes.push('scrambled_eggs');
-      state.coins = 999;
+      // Asserting `toThrow()` without a class — under Babel/Jest, the TypeError
+      // thrown inside transpiled module code isn't the same constructor
+      // identity as this test file's TypeError, so toThrow(TypeError) fails an
+      // `instanceof` check despite the names matching. The throw itself is the
+      // contract we care about.
+      expect(() => state.discoveredRecipes.push('scrambled_eggs')).toThrow();
+      expect(() => { state.coins = 999; }).toThrow();
       expect(getState().discoveredRecipes).toEqual([]);
       expect(getState().coins).toBe(0);
     });
@@ -176,8 +181,12 @@ describe('state system', () => {
       const before = getState();
       resetState();
       const after = getState();
-      // Mutating the old reference should not affect the reset state
-      before.discoveredRecipes.push('scrambled_eggs');
+      // resetState replaces the internal state with a brand-new object, so the
+      // pre-reset and post-reset references are distinct and have their own
+      // independent values. The old `before` snapshot still reads as its
+      // pre-reset content; `after` reads as the default state.
+      expect(after).not.toBe(before);
+      expect(before.discoveredRecipes).toEqual(['caramel', 'bread']);
       expect(after.discoveredRecipes).toEqual([]);
     });
   });

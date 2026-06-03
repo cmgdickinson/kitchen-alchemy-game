@@ -4,6 +4,18 @@ import { getState, setState } from './state.js';
 
 const MAX_ORDERS = 3;
 
+// Result-id → recipe lookup built once at module load. Lets getOrderableRecipes
+// resolve a discovered recipe by its result id in O(1) instead of scanning the
+// whole RECIPES array per lookup.
+//
+// `RECIPES.map(r => [r.result, r])` produces an array of [key, value] pairs
+// (e.g. [['paste', {...}], ['egg_wash', {...}], ...]), which is the shape the
+// Map constructor expects.
+//
+// Mirrors the pattern in combination.js, which builds a similar lookup keyed
+// by sorted-ingredient-string instead.
+const _recipesByResult = new Map(RECIPES.map(r => [r.result, r]));
+
 const CUSTOMER_NAMES = [
   'Hungry Harold', 'Ravenous Rachel', 'Peckish Pete', 'Famished Fiona',
   'Starving Steve', 'Greedy Greg', 'Empty Emma', 'Hollow Hans',
@@ -36,8 +48,11 @@ export function getActiveOrders() {
 
 function getOrderableRecipes() {
   const { discoveredRecipes } = getState();
+  // .get() returns the recipe object for that result id, or undefined if not found.
+  // The .filter() then drops any undefineds plus any recipes whose result item
+  // isn't marked orderable in INGREDIENTS.
   return discoveredRecipes
-    .map(id => RECIPES.find(r => r.result === id))
+    .map(id => _recipesByResult.get(id))
     .filter(r => r && INGREDIENTS[r.result]?.orderable);
 }
 

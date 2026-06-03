@@ -28,6 +28,13 @@
   margin-bottom: 6px;
 }
 
+/* Expired-customer messages reuse .order-placeholder for layout and add this
+   attribute (set as data-expired on the element) for the danger colouring. */
+.order-placeholder[data-expired] {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
 .order-card {
   background: var(--surface-warm);
   border: 2px solid var(--border);

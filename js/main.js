@@ -57,13 +57,30 @@ function computeHintCounts(discoveredRecipes) {
   return counts;
 }
 
+// Memoization cache for computeHintCounts. The result depends only on
+// discoveredRecipes, which is append-only between resets and goes back to 0
+// on reset — so .length is a sufficient fingerprint. Same trick as the
+// memoization in recipeBook.js. -1 is the "never cached yet" sentinel (0 is
+// a legitimate length for a fresh game).
+let _cachedHintCounts = null;
+let _cachedHintCountsForLen = -1;
+
 function currentHintCounts() {
-  return _hintsEnabled ? computeHintCounts(getState().discoveredRecipes) : null;
+  if (!_hintsEnabled) return null;
+  const discovered = getState().discoveredRecipes;
+  if (discovered.length !== _cachedHintCountsForLen) {
+    _cachedHintCounts = computeHintCounts(discovered);
+    _cachedHintCountsForLen = discovered.length;
+  }
+  return _cachedHintCounts;
 }
 
-function fullRedraw(newItemIds = []) {
+function fullRedraw() {
   const state = getState();
-  renderPantry(state.unlockedItems, _selected, newItemIds, currentHintCounts());
+  // Pantry's third arg is the list of items to flash a "New!" badge on. Both
+  // callers of fullRedraw (init, handleReset) are situations where no flashes
+  // are wanted, so we hardcode an empty list here.
+  renderPantry(state.unlockedItems, _selected, [], currentHintCounts());
   renderWorkspace(_selected);
   renderRecipeBook(state.discoveredRecipes);
   renderOrderBoard(getActiveOrders(), state.discoveredRecipes);
@@ -136,15 +153,20 @@ function handleCombine() {
   }
 
   const state = getState();
-  const discoveredSet = new Set(state.discoveredRecipes); // O(1) lookup vs O(n) with array.includes
-  const unlockedSet = new Set(state.unlockedItems);       // O(1) lookup vs O(n) with array.includes
-  const isNew = !discoveredSet.has(recipe.result);
+  // .includes returns true/false for a single check — no Set needed for one lookup
+  const isNew = !state.discoveredRecipes.includes(recipe.result);
   const resultItem = INGREDIENTS[recipe.result];
 
   if (isNew) {
-    // Unlock the result item and record the discovery
+    // Unlock the result item and record the discovery.
+    // [...arr] uses the spread operator to make a shallow copy, so we don't mutate state directly.
     const newUnlocked = [...state.unlockedItems];
-    if (!unlockedSet.has(recipe.result)) {
+    // Guards against a recipe result that's already unlocked — currently impossible since each
+    // recipe has a unique result, but will matter once a result can be reached by multiple combos.
+    // In that future case, discovering a new combo path for an already-unlocked result will skip
+    // the "New!" flash (no flash for an item the player can already see in the pantry) while still
+    // recording the new combo path as discovered.
+    if (!state.unlockedItems.includes(recipe.result)) {
       newUnlocked.push(recipe.result);
       _newItems = [recipe.result];
     }
@@ -165,7 +187,23 @@ function handleCombine() {
   showSuccess(recipe, resultItem, isNew);
   _selected = [];
 
-  fullRedraw(_newItems);
+  // Renderer dispatch — call only the panels whose inputs actually changed.
+  // We avoid fullRedraw here so a successful combine of an already-known recipe
+  // doesn't pointlessly rebuild the recipe book and order board.
+  if (isNew) {
+    // setState() above (and checkMilestones, which may also setState) changed
+    // discoveredRecipes / unlockedItems / triggeredMilestones, so re-read state.
+    const updated = getState();
+    renderPantry(updated.unlockedItems, _selected, _newItems, currentHintCounts());
+    renderWorkspace(_selected);
+    renderRecipeBook(updated.discoveredRecipes);
+    renderOrderBoard(getActiveOrders(), updated.discoveredRecipes);
+  } else {
+    // Known recipe: no game state changed, only the workspace selection was cleared.
+    // Pantry redraw is still needed to drop the "selected" highlight from the cards.
+    renderPantry(state.unlockedItems, _selected, [], currentHintCounts());
+    renderWorkspace(_selected);
+  }
   _newItems = [];
 
   if (isNew && getActiveOrders().length === 0) tryFillOrders();
@@ -220,6 +258,9 @@ function handleReset() {
   _selected = [];
   _newItems  = [];
   _milestoneQueue = [];
+  // Wipes the result-area card from before the reset, and clears its pending
+  // 10s auto-clear timer so it can't fire and wipe a future result.
+  clearResult();
   fullRedraw();
 }
 

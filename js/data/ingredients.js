@@ -59,3 +59,15 @@ export const INGREDIENTS = {
   salted_caramel:      { name: 'Salted Caramel',       emoji: '🍮', unlockType: 'recipe', orderable: true  },
   chocolate_cream:     { name: 'Chocolate Cream',      emoji: '🎂', unlockType: 'recipe', orderable: true  },
 };
+
+// The seven ingredients a new game starts with. Derived from INGREDIENTS so this
+// list stays in sync automatically when ingredients are added or re-categorized
+// — there's only one place to update.
+//
+// Object.keys() returns an object's keys as an array, in the order they were
+// inserted (for string keys). Then .filter() walks that array and keeps only
+// the ids whose unlockType is 'start'. The arrow function `id => ...` is
+// shorthand for `function(id) { return ...; }`.
+export const STARTING_ITEMS = Object.keys(INGREDIENTS).filter(
+  id => INGREDIENTS[id].unlockType === 'start'
+);

@@ -22,7 +22,7 @@ export function renderWorkspace(selectedIds) {
         <span class="slot-name"></span>
         <button class="workspace-slot-remove" title="Remove">×</button>
       `;
-      // Set via textContent/dataset to prevent XSS if these values ever come from user input or external sources
+      // textContent/dataset — prevents XSS (convention note in pantry.js)
       slot.querySelector('.slot-emoji').textContent = item.emoji;
       slot.querySelector('.slot-name').textContent = item.name;
       slot.querySelector('.workspace-slot-remove').dataset.removeId = id;
@@ -51,7 +51,7 @@ export function showSuccess(recipe, resultItem, isNew) {
       <p class="result-card-desc"></p>
     </div>
   `;
-  // Set via textContent to prevent XSS if these values ever come from user input or external sources
+  // textContent — prevents XSS (convention note in pantry.js)
   area.querySelector('.result-card-emoji').textContent = resultItem.emoji;
   area.querySelector('.result-card-name').textContent = resultItem.name;
   area.querySelector('.result-card-desc').textContent = recipe.description;
@@ -69,7 +69,7 @@ export function showFailure(message) {
       <p class="result-card-desc"></p>
     </div>
   `;
-  // Set via textContent to prevent XSS if these values ever come from user input or external sources
+  // textContent — prevents XSS (convention note in pantry.js)
   area.querySelector('.result-card-desc').textContent = message;
 
   _resultClearTimer = setTimeout(() => { area.innerHTML = ''; }, 4000);

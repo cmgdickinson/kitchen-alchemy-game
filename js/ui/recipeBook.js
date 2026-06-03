@@ -1,9 +1,27 @@
 import { RECIPES } from '../data/recipes.js';
 import { INGREDIENTS } from '../data/ingredients.js';
 
+// Tracks how many recipes were discovered the last time we rendered, so we can
+// skip rebuilding the grid when nothing has changed. -1 means "never rendered yet"
+// (0 is a valid real value — a fresh game with no discoveries).
+//
+// Invariant this relies on: discoveredRecipes only grows between resets, and a
+// reset takes it back to 0. So a change in length always means a change in
+// contents. If that ever stops being true (e.g. players can un-favorite a
+// recipe), this check needs to compare contents, not just length.
+let _lastRenderedCount = -1;
+
 export function renderRecipeBook(discoveredRecipeIds) {
+  // Skip the whole render when nothing changed since last call. Saves rebuilding
+  // ~36 (and growing) DOM nodes on every successful combine of an already-known
+  // recipe, which is the common case during play.
+  if (discoveredRecipeIds.length === _lastRenderedCount) return;
+
   const grid = document.getElementById('recipe-grid');
   if (!grid) return;
+  // Only update the counter once we know we're actually rendering — otherwise an
+  // early bail-out below could leave us "claiming" we rendered when we didn't.
+  _lastRenderedCount = discoveredRecipeIds.length;
 
   const countEl = document.getElementById('recipe-count');
   const totalEl = document.getElementById('recipe-total');
@@ -31,7 +49,7 @@ export function renderRecipeBook(discoveredRecipeIds) {
         <div class="recipe-card-ingredients"></div>
         <div class="recipe-card-desc"></div>
       `;
-      // Set via textContent to prevent XSS if these values ever come from user input or external sources
+      // textContent — prevents XSS (convention note in pantry.js)
       card.querySelector('.recipe-card-emoji').textContent = result?.emoji ?? '❓';
       card.querySelector('.recipe-card-name').textContent = result?.name ?? recipe.result;
       card.querySelector('.recipe-card-ingredients').textContent = ingredientNames;
