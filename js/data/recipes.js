@@ -127,12 +127,12 @@ export const RECIPES = [
     description: "Sweet, sharp, and deeply passive-aggressive. It will improve your drink and then remind you it didn't have to.",
   },
   {
-    combinations: [['caramel', 'butter', 'milk']],
+    combinations: [['caramel', 'butter', 'milk'], ['sugar', 'butter', 'milk']],
     result: 'butterscotch',
     description: "Like caramel, but it went to private school, summer abroad, and came back with a mid-Atlantic accent.",
   },
   {
-    combinations: [['chocolate', 'butter', 'sugar']],
+    combinations: [['chocolate', 'cream'], ['chocolate', 'butter', 'sugar']],
     result: 'chocolate_ganache',
     description: "A glossy mirror into your own life choices. They are delicious choices. No regrets.",
   },
