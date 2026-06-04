@@ -76,7 +76,7 @@ export const RECIPES = [
     description: "Italy would like several words. All of them are passionate. All of them involve hand gestures.",
   },
   {
-    combinations: [['sugar', 'butter', 'milk']],
+    combinations: [['caramel', 'milk'], ['sugar', 'butter', 'milk']],
     result: 'toffee',
     description: "Caramel went to finishing school and came out chewier and even more pleased with itself.",
   },
@@ -107,7 +107,7 @@ export const RECIPES = [
     description: "Batter that grew a spine. Those little bubbles forming? That's ambition. That's breakfast happening.",
   },
   {
-    combinations: [['pancake_batter', 'butter']],
+    combinations: [['pancake_batter', 'butter'], ['batter', 'butter', 'baking_powder']],
     result: 'pancakes',
     description: "A flat cake that society has collectively decided is acceptable for breakfast but not dessert. Nobody knows why. Nobody questions it.",
   },
@@ -137,12 +137,12 @@ export const RECIPES = [
     description: "A glossy mirror into your own life choices. They are delicious choices. No regrets.",
   },
   {
-    combinations: [['milk', 'cinnamon', 'sugar']],
+    combinations: [['sweet_milk', 'cinnamon'], ['milk', 'cinnamon', 'sugar']],
     result: 'horchata',
     description: "A drink so good it crossed entire oceans and time zones to get to you. It would do it again.",
   },
   {
-    combinations: [['chocolate', 'milk', 'sugar']],
+    combinations: [['chocolate', 'sweet_milk'], ['chocolate', 'milk', 'sugar']],
     result: 'hot_chocolate',
     description: "Liquid comfort. Scientists have measured its effects on morale. Results were classified because they were too powerful.",
   },
@@ -157,7 +157,7 @@ export const RECIPES = [
     description: "Humanity's oldest flex. Entire civilizations rose and fell over this humble loaf. You did it.",
   },
   {
-    combinations: [['egg', 'milk', 'vanilla', 'sugar']],
+    combinations: [['sweet_milk', 'egg', 'vanilla'], ['egg', 'milk', 'vanilla', 'sugar']],
     result: 'french_toast_batter',
     description: "The French did not invent this. The French are deeply annoyed about it. The French will not let it go.",
   },
@@ -170,7 +170,7 @@ export const RECIPES = [
   // ── Tier 5: Chained combinations ─────────────────────────────
 
   {
-    combinations: [['meringue_base', 'vanilla']],
+    combinations: [['meringue_base', 'vanilla'], ['egg', 'sugar', 'vanilla']],
     result: 'pavlova',
     description: "Named after a ballerina. It's crisp on the outside, soft on the inside, and the centre of an eternal diplomatic dispute between Australia and New Zealand.",
   },
@@ -190,7 +190,7 @@ export const RECIPES = [
     description: "Two powerhouses walking into a room and immediately understanding each other. A perfect partnership. A culinary power couple.",
   },
   {
-    combinations: [['caramel', 'cream', 'salt']],
+    combinations: [['caramel', 'salt'], ['caramel', 'cream', 'salt'], ['sugar', 'butter', 'salt']],
     result: 'salted_caramel',
     description: "Salt and sweet fighting for dominance. They called a truce. The truce is delicious. You win.",
   },
