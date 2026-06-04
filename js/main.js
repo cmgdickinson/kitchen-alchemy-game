@@ -145,40 +145,49 @@ function handleWorkspaceRemove(id) {
 function handleCombine() {
   if (_selected.length < 2) return;
 
-  const recipe = tryRecipe(_selected);
+  const recipes = tryRecipe(_selected);
 
-  if (!recipe) {
+  if (recipes.length === 0) {
     showFailure(FAILURE_MESSAGES[Math.floor(Math.random() * FAILURE_MESSAGES.length)]);
     return;
   }
 
   const state = getState();
   const comboKey = combinationKey(_selected);
-  const existingCombos = state.discoveredCombinations[recipe.result] ?? [];
-  const isNewCombo = !existingCombos.includes(comboKey);
-  const isNewRecipe = existingCombos.length === 0;
-  const resultItem = INGREDIENTS[recipe.result];
 
-  if (isNewCombo) {
-    const patch = {
-      discoveredCombinations: {
-        ...state.discoveredCombinations,
-        [recipe.result]: [...existingCombos, comboKey],
-      },
+  const matches = recipes.map(recipe => {
+    const existingCombos = state.discoveredCombinations[recipe.result] ?? [];
+    return {
+      recipe,
+      resultItem: INGREDIENTS[recipe.result],
+      existingCombos,
+      isNewCombo: !existingCombos.includes(comboKey),
+      isNewRecipe: existingCombos.length === 0,
     };
+  });
 
-    if (isNewRecipe) {
+  const anyNewCombo = matches.some(m => m.isNewCombo);
+  const anyNewRecipe = matches.some(m => m.isNewRecipe);
+
+  if (anyNewCombo) {
+    const newDiscovered = { ...state.discoveredCombinations };
+    const newUnlocked = [...state.unlockedItems];
+    for (const m of matches) {
+      if (!m.isNewCombo) continue;
+      newDiscovered[m.recipe.result] = [...m.existingCombos, comboKey];
       // Guard against the result already being in the pantry (e.g. milestone reward).
-      if (!state.unlockedItems.includes(recipe.result)) {
-        patch.unlockedItems = [...state.unlockedItems, recipe.result];
-        _newItems = [recipe.result];
+      if (m.isNewRecipe && !newUnlocked.includes(m.recipe.result)) {
+        newUnlocked.push(m.recipe.result);
+        _newItems.push(m.recipe.result);
       }
     }
 
+    const patch = { discoveredCombinations: newDiscovered };
+    if (newUnlocked.length !== state.unlockedItems.length) patch.unlockedItems = newUnlocked;
     setState(patch);
 
     // Milestones depend on discovered-recipe count — only bumped on new-recipe discoveries.
-    if (isNewRecipe) {
+    if (anyNewRecipe) {
       const triggered = checkMilestones();
       if (triggered.length > 0) {
         _milestoneQueue.push(...triggered);
@@ -188,12 +197,12 @@ function handleCombine() {
     }
   }
 
-  showSuccess(recipe, resultItem, isNewRecipe);
+  showSuccess(matches);
   _selected = [];
 
   // Skip fullRedraw when no game state changed — saves rebuilding the recipe
   // book and order board on a combine of an already-known combination.
-  if (isNewCombo) {
+  if (anyNewCombo) {
     // setState above (plus checkMilestones, which may also setState) replaced _state.
     const updated = getState();
     renderPantry(updated.unlockedItems, _selected, _newItems, currentHintCounts());
@@ -207,7 +216,7 @@ function handleCombine() {
   }
   _newItems = [];
 
-  if (isNewRecipe && getActiveOrders().length === 0) tryFillOrders();
+  if (anyNewRecipe && getActiveOrders().length === 0) tryFillOrders();
 }
 
 // ── Orders ────────────────────────────────────────────────────────────────────

@@ -6,14 +6,17 @@ export function combinationKey(ingredientIds) {
   return ingredientIds.slice().sort().join(' ');
 }
 
-// One entry per combination — a recipe with N combinations contributes N entries.
+// combinationKey → recipes producible by that combination. A combination may map to
+// more than one recipe; recipes with N combinations each contribute N entries.
 const recipeMap = new Map();
 for (const recipe of RECIPES) {
   for (const combination of recipe.combinations) {
-    recipeMap.set(combinationKey(combination), recipe);
+    const key = combinationKey(combination);
+    if (!recipeMap.has(key)) recipeMap.set(key, []);
+    recipeMap.get(key).push(recipe);
   }
 }
 
 export function tryRecipe(ingredientIds) {
-  return recipeMap.get(combinationKey(ingredientIds)) ?? null;
+  return recipeMap.get(combinationKey(ingredientIds)) ?? [];
 }

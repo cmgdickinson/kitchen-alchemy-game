@@ -64,16 +64,13 @@ describe('RECIPES', () => {
     expect(new Set(results).size).toBe(results.length);
   });
 
-  // Strict for now: each combination key globally unique. Relax to "(combination,
-  // result) unique" when the first multi-result recipe lands — and pair with a
-  // change in combination.js's recipeMap (Map.set silently overwrites collisions).
-  test('no two combinations share the same sorted ingredient set', () => {
-    const seen = new Map();
+  test('every (combination, result) pair is unique', () => {
+    const seen = new Set();
     for (const recipe of RECIPES) {
       for (const combination of recipe.combinations) {
-        const key = combination.slice().sort().join('|');
-        expect(seen.has(key)).toBe(false);
-        seen.set(key, recipe.result);
+        const pair = `${combination.slice().sort().join('|')} → ${recipe.result}`;
+        expect(seen.has(pair)).toBe(false);
+        seen.add(pair);
       }
     }
   });
