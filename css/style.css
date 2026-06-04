@@ -212,7 +212,13 @@ section:last-child {
   font-size: 0.85rem;
 }
 
-.recipe-card-ingredients {
+.recipe-card-progress {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.recipe-card-combinations {
   font-size: 0.72rem;
   color: var(--text-muted);
   margin-bottom: 5px;
