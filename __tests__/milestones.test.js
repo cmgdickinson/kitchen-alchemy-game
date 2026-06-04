@@ -7,6 +7,12 @@ const localStorageMock = {
 
 global.localStorage = localStorageMock;
 
+// Build a discoveredCombinations stub from a list of fake result IDs. milestones.js
+// only cares about the *count* of discovered recipes, so each result just needs a
+// non-empty combination array.
+const fakeDiscoveries = (...ids) =>
+  Object.fromEntries(ids.map(id => [id, ['_']]));
+
 describe('milestone system', () => {
   let stateModule, checkMilestones;
 
@@ -26,20 +32,20 @@ describe('milestone system', () => {
   // ── Discovery-based milestones ────────────────────────────────────────────
 
   test('triggers the first discovery milestone (unlock_yeast) when 3 recipes are discovered', () => {
-    stateModule.setState({ discoveredRecipes: ['a', 'b', 'c'] });
+    stateModule.setState({ discoveredCombinations: fakeDiscoveries('a', 'b', 'c') });
     const triggered = checkMilestones();
     expect(triggered.map(m => m.id)).toContain('unlock_yeast');
   });
 
   test('does not trigger a discovery milestone when count is one short', () => {
-    stateModule.setState({ discoveredRecipes: ['a', 'b'] }); // need 3 for yeast
+    stateModule.setState({ discoveredCombinations: fakeDiscoveries('a', 'b') }); // need 3 for yeast
     const triggered = checkMilestones();
     expect(triggered.map(m => m.id)).not.toContain('unlock_yeast');
   });
 
   test('triggers exactly on the boundary count', () => {
     // unlock_vanilla requires exactly 7 discoveries
-    stateModule.setState({ discoveredRecipes: ['a','b','c','d','e','f','g'] });
+    stateModule.setState({ discoveredCombinations: fakeDiscoveries('a','b','c','d','e','f','g') });
     const triggered = checkMilestones();
     expect(triggered.map(m => m.id)).toContain('unlock_vanilla');
   });
@@ -62,13 +68,13 @@ describe('milestone system', () => {
   // ── State mutations ───────────────────────────────────────────────────────
 
   test('adds the reward ingredient to unlockedItems', () => {
-    stateModule.setState({ discoveredRecipes: ['a', 'b', 'c'] });
+    stateModule.setState({ discoveredCombinations: fakeDiscoveries('a', 'b', 'c') });
     checkMilestones();
     expect(stateModule.getState().unlockedItems).toContain('yeast');
   });
 
   test('adds the milestone id to triggeredMilestones', () => {
-    stateModule.setState({ discoveredRecipes: ['a', 'b', 'c'] });
+    stateModule.setState({ discoveredCombinations: fakeDiscoveries('a', 'b', 'c') });
     checkMilestones();
     expect(stateModule.getState().triggeredMilestones).toContain('unlock_yeast');
   });
@@ -76,7 +82,7 @@ describe('milestone system', () => {
   test('does not add a duplicate ingredient if it is already in unlockedItems', () => {
     const startingWithYeast = ['water','egg','milk','flour','sugar','butter','salt','yeast'];
     stateModule.setState({
-      discoveredRecipes: ['a', 'b', 'c'],
+      discoveredCombinations: fakeDiscoveries('a', 'b', 'c'),
       unlockedItems: startingWithYeast,
     });
     checkMilestones();
@@ -88,7 +94,7 @@ describe('milestone system', () => {
 
   test('does not re-trigger an already triggered milestone', () => {
     stateModule.setState({
-      discoveredRecipes: ['a', 'b', 'c'],
+      discoveredCombinations: fakeDiscoveries('a', 'b', 'c'),
       triggeredMilestones: ['unlock_yeast'],
     });
     const triggered = checkMilestones();
@@ -96,7 +102,7 @@ describe('milestone system', () => {
   });
 
   test('is idempotent — calling it twice returns nothing on the second call', () => {
-    stateModule.setState({ discoveredRecipes: ['a', 'b', 'c'] });
+    stateModule.setState({ discoveredCombinations: fakeDiscoveries('a', 'b', 'c') });
     checkMilestones();
     const second = checkMilestones();
     expect(second).toEqual([]);
@@ -106,7 +112,7 @@ describe('milestone system', () => {
 
   test('can trigger multiple milestones in a single call', () => {
     // 7 discoveries hits both unlock_yeast (3) and unlock_vanilla (7)
-    stateModule.setState({ discoveredRecipes: ['a','b','c','d','e','f','g'] });
+    stateModule.setState({ discoveredCombinations: fakeDiscoveries('a','b','c','d','e','f','g') });
     const triggered = checkMilestones();
     const ids = triggered.map(m => m.id);
     expect(ids).toContain('unlock_yeast');
@@ -114,7 +120,7 @@ describe('milestone system', () => {
   });
 
   test('triggering multiple milestones unlocks all reward ingredients', () => {
-    stateModule.setState({ discoveredRecipes: ['a','b','c','d','e','f','g'] });
+    stateModule.setState({ discoveredCombinations: fakeDiscoveries('a','b','c','d','e','f','g') });
     checkMilestones();
     const { unlockedItems } = stateModule.getState();
     expect(unlockedItems).toContain('yeast');
@@ -122,7 +128,7 @@ describe('milestone system', () => {
   });
 
   test('triggering multiple milestones records all of their ids', () => {
-    stateModule.setState({ discoveredRecipes: ['a','b','c','d','e','f','g'] });
+    stateModule.setState({ discoveredCombinations: fakeDiscoveries('a','b','c','d','e','f','g') });
     checkMilestones();
     const { triggeredMilestones } = stateModule.getState();
     expect(triggeredMilestones).toContain('unlock_yeast');
@@ -132,7 +138,7 @@ describe('milestone system', () => {
   // ── Return value ──────────────────────────────────────────────────────────
 
   test('returns the full milestone objects, not just IDs', () => {
-    stateModule.setState({ discoveredRecipes: ['a', 'b', 'c'] });
+    stateModule.setState({ discoveredCombinations: fakeDiscoveries('a', 'b', 'c') });
     const [milestone] = checkMilestones();
     expect(milestone).toMatchObject({
       id: expect.any(String),

@@ -37,9 +37,16 @@ describe('RECIPES', () => {
     }
   });
 
-  test('every recipe ingredient ID exists in INGREDIENTS', () => {
+  test('every recipe has at least one combination', () => {
     for (const recipe of RECIPES) {
-      for (const ing of recipe.ingredients) {
+      expect(Array.isArray(recipe.combinations)).toBe(true);
+      expect(recipe.combinations.length).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  test('every ingredient ID across all combinations exists in INGREDIENTS', () => {
+    for (const recipe of RECIPES) {
+      for (const ing of recipe.combinations.flat()) {
         expect(INGREDIENTS[ing]).toBeDefined();
       }
     }
@@ -57,24 +64,35 @@ describe('RECIPES', () => {
     expect(new Set(results).size).toBe(results.length);
   });
 
-  test('no two recipes share the same sorted ingredient combination', () => {
+  // Today's stricter invariant: each combination key is globally unique. When the
+  // first multi-result-from-one-combination recipe is authored, relax this to
+  // "(combination, result) is unique" — the production code (recipeMap.set in
+  // combination.js) silently overwrites collisions, so any relaxation here must
+  // be paired with a change there.
+  test('no two combinations share the same sorted ingredient set', () => {
     const seen = new Map();
     for (const recipe of RECIPES) {
-      const key = recipe.ingredients.slice().sort().join('|');
-      expect(seen.has(key)).toBe(false);
-      seen.set(key, recipe.result);
+      for (const combination of recipe.combinations) {
+        const key = combination.slice().sort().join('|');
+        expect(seen.has(key)).toBe(false);
+        seen.set(key, recipe.result);
+      }
     }
   });
 
-  test('every recipe requires at least 2 ingredients', () => {
+  test('every combination has at least 2 ingredients', () => {
     for (const recipe of RECIPES) {
-      expect(recipe.ingredients.length).toBeGreaterThanOrEqual(2);
+      for (const combination of recipe.combinations) {
+        expect(combination.length).toBeGreaterThanOrEqual(2);
+      }
     }
   });
 
-  test('every recipe requires at most 4 ingredients', () => {
+  test('every combination has at most 4 ingredients', () => {
     for (const recipe of RECIPES) {
-      expect(recipe.ingredients.length).toBeLessThanOrEqual(4);
+      for (const combination of recipe.combinations) {
+        expect(combination.length).toBeLessThanOrEqual(4);
+      }
     }
   });
 

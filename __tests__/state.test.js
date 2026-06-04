@@ -10,12 +10,12 @@ const localStorageMock = {
 global.localStorage = localStorageMock;
 
 describe('state system', () => {
-  let loadState, getState, setState, resetState;
+  let loadState, getState, setState, resetState, getDiscoveredRecipes;
 
   beforeEach(() => {
     localStorageMock._store = {};
     jest.resetModules();
-    ({ loadState, getState, setState, resetState } = require('../js/systems/state'));
+    ({ loadState, getState, setState, resetState, getDiscoveredRecipes } = require('../js/systems/state'));
   });
 
   // ── loadState ───────────────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ describe('state system', () => {
       const state = getState();
       expect(state.coins).toBe(0);
       expect(state.completedOrders).toBe(0);
-      expect(state.discoveredRecipes).toEqual([]);
+      expect(state.discoveredCombinations).toEqual({});
       expect(state.triggeredMilestones).toEqual([]);
       expect(state.unlockedItems).toEqual(
         ['water', 'egg', 'milk', 'flour', 'sugar', 'butter', 'salt']
@@ -37,7 +37,10 @@ describe('state system', () => {
       const saved = {
         coins: 42,
         completedOrders: 5,
-        discoveredRecipes: ['scrambled_eggs', 'caramel'],
+        discoveredCombinations: {
+          scrambled_eggs: ['butter egg'],
+          caramel: ['butter sugar'],
+        },
         triggeredMilestones: ['unlock_yeast'],
         unlockedItems: ['water', 'egg', 'milk', 'flour', 'sugar', 'butter', 'salt', 'yeast'],
       };
@@ -47,7 +50,10 @@ describe('state system', () => {
       const state = getState();
       expect(state.coins).toBe(42);
       expect(state.completedOrders).toBe(5);
-      expect(state.discoveredRecipes).toEqual(['scrambled_eggs', 'caramel']);
+      expect(state.discoveredCombinations).toEqual({
+        scrambled_eggs: ['butter egg'],
+        caramel: ['butter sugar'],
+      });
       expect(state.triggeredMilestones).toEqual(['unlock_yeast']);
     });
 
@@ -58,7 +64,7 @@ describe('state system', () => {
       loadState();
       const state = getState();
       expect(state.coins).toBe(99);
-      expect(state.discoveredRecipes).toEqual([]);
+      expect(state.discoveredCombinations).toEqual({});
       expect(state.completedOrders).toBe(0);
     });
 
@@ -72,7 +78,7 @@ describe('state system', () => {
       loadState();
       expect(getState().coins).toBe(0);
 
-      localStorageMock._store[STORAGE_KEY] = JSON.stringify({ coins: 77, discoveredRecipes: [], triggeredMilestones: [], completedOrders: 0, unlockedItems: [] });
+      localStorageMock._store[STORAGE_KEY] = JSON.stringify({ coins: 77, discoveredCombinations: {}, triggeredMilestones: [], completedOrders: 0, unlockedItems: [] });
       loadState();
       expect(getState().coins).toBe(77);
     });
@@ -84,7 +90,7 @@ describe('state system', () => {
     test('returns a default state object before loadState is called', () => {
       const state = getState();
       expect(state.coins).toBe(0);
-      expect(state.discoveredRecipes).toEqual([]);
+      expect(state.discoveredCombinations).toEqual({});
       expect(typeof state).toBe('object');
     });
 
@@ -96,9 +102,9 @@ describe('state system', () => {
       // identity as this test file's TypeError, so toThrow(TypeError) fails an
       // `instanceof` check despite the names matching. The throw itself is the
       // contract we care about.
-      expect(() => state.discoveredRecipes.push('scrambled_eggs')).toThrow();
+      expect(() => { state.discoveredCombinations.scrambled_eggs = ['butter egg']; }).toThrow();
       expect(() => { state.coins = 999; }).toThrow();
-      expect(getState().discoveredRecipes).toEqual([]);
+      expect(getState().discoveredCombinations).toEqual({});
       expect(getState().coins).toBe(0);
     });
   });
@@ -115,7 +121,7 @@ describe('state system', () => {
     test('preserves fields not included in the patch', () => {
       loadState();
       setState({ coins: 50 });
-      expect(getState().discoveredRecipes).toEqual([]);
+      expect(getState().discoveredCombinations).toEqual({});
       expect(getState().completedOrders).toBe(0);
       expect(getState().unlockedItems).toHaveLength(7);
     });
@@ -127,11 +133,14 @@ describe('state system', () => {
       expect(stored.coins).toBe(123);
     });
 
-    test('persists array fields correctly', () => {
+    test('persists object fields correctly', () => {
       loadState();
-      setState({ discoveredRecipes: ['scrambled_eggs', 'caramel'] });
+      setState({ discoveredCombinations: { scrambled_eggs: ['butter egg'], caramel: ['butter sugar'] } });
       const stored = JSON.parse(localStorageMock._store[STORAGE_KEY]);
-      expect(stored.discoveredRecipes).toEqual(['scrambled_eggs', 'caramel']);
+      expect(stored.discoveredCombinations).toEqual({
+        scrambled_eggs: ['butter egg'],
+        caramel: ['butter sugar'],
+      });
     });
 
     test('multiple patches accumulate correctly', () => {
@@ -149,12 +158,12 @@ describe('state system', () => {
   describe('resetState', () => {
     test('resets all state fields back to defaults', () => {
       loadState();
-      setState({ coins: 999, completedOrders: 50, discoveredRecipes: ['bread'] });
+      setState({ coins: 999, completedOrders: 50, discoveredCombinations: { bread: ['flour salt water yeast'] } });
       resetState();
       const state = getState();
       expect(state.coins).toBe(0);
       expect(state.completedOrders).toBe(0);
-      expect(state.discoveredRecipes).toEqual([]);
+      expect(state.discoveredCombinations).toEqual({});
       expect(state.triggeredMilestones).toEqual([]);
     });
 
@@ -177,7 +186,7 @@ describe('state system', () => {
 
     test('state returned after reset is independent of the previous state object', () => {
       loadState();
-      setState({ discoveredRecipes: ['caramel', 'bread'] });
+      setState({ discoveredCombinations: { caramel: ['butter sugar'], bread: ['flour salt water yeast'] } });
       const before = getState();
       resetState();
       const after = getState();
@@ -186,8 +195,61 @@ describe('state system', () => {
       // independent values. The old `before` snapshot still reads as its
       // pre-reset content; `after` reads as the default state.
       expect(after).not.toBe(before);
-      expect(before.discoveredRecipes).toEqual(['caramel', 'bread']);
-      expect(after.discoveredRecipes).toEqual([]);
+      expect(before.discoveredCombinations).toEqual({
+        caramel: ['butter sugar'],
+        bread: ['flour salt water yeast'],
+      });
+      expect(after.discoveredCombinations).toEqual({});
+    });
+  });
+
+  // ── getDiscoveredRecipes ────────────────────────────────────────────────────
+
+  describe('getDiscoveredRecipes', () => {
+    test('returns the empty list when no combinations have been discovered', () => {
+      loadState();
+      expect(getDiscoveredRecipes()).toEqual([]);
+    });
+
+    test('returns the result IDs that have at least one discovered combination', () => {
+      loadState();
+      setState({ discoveredCombinations: {
+        scrambled_eggs: ['butter egg'],
+        caramel: ['butter sugar'],
+      }});
+      expect(getDiscoveredRecipes()).toEqual(['scrambled_eggs', 'caramel']);
+    });
+
+    test('reflects updates after setState', () => {
+      loadState();
+      setState({ discoveredCombinations: { scrambled_eggs: ['butter egg'] } });
+      expect(getDiscoveredRecipes()).toEqual(['scrambled_eggs']);
+      setState({ discoveredCombinations: {
+        scrambled_eggs: ['butter egg'],
+        bread: ['flour salt water yeast'],
+      }});
+      expect(getDiscoveredRecipes()).toEqual(['scrambled_eggs', 'bread']);
+    });
+
+    test('returns the same array reference when discoveredCombinations has not changed', () => {
+      loadState();
+      setState({ discoveredCombinations: { scrambled_eggs: ['butter egg'] } });
+      const first = getDiscoveredRecipes();
+      // An unrelated setState replaces _state but carries discoveredCombinations
+      // through by reference, so the memoised result should be the same array.
+      setState({ coins: 50 });
+      const second = getDiscoveredRecipes();
+      expect(second).toBe(first);
+    });
+
+    test('returns a fresh array reference after resetState', () => {
+      loadState();
+      setState({ discoveredCombinations: { scrambled_eggs: ['butter egg'] } });
+      const before = getDiscoveredRecipes();
+      resetState();
+      const after = getDiscoveredRecipes();
+      expect(after).not.toBe(before);
+      expect(after).toEqual([]);
     });
   });
 });

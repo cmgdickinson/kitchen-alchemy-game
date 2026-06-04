@@ -11,6 +11,12 @@ global.localStorage = localStorageMock;
 // scrambled_eggs (egg+butter) and caramel (sugar+butter) are both orderable.
 const ORDERABLE_RECIPES = ['scrambled_eggs', 'caramel', 'bechamel', 'toffee', 'bread'];
 
+// Build a discoveredCombinations stub from a list of fake result IDs. orders.js
+// only cares about which results are discovered; the combination keys themselves
+// don't matter for these tests, so '_' is fine.
+const fakeDiscoveries = (...ids) =>
+  Object.fromEntries(ids.map(id => [id, ['_']]));
+
 describe('order system', () => {
   let stateModule, ordersModule;
 
@@ -45,26 +51,26 @@ describe('order system', () => {
     });
 
     test('generates at least one order when an orderable recipe is discovered', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       expect(ordersModule.getActiveOrders().length).toBeGreaterThan(0);
     });
 
     test('fills up to the maximum of 3 slots', () => {
-      stateModule.setState({ discoveredRecipes: ORDERABLE_RECIPES });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries(...ORDERABLE_RECIPES) });
       ordersModule.tryFillOrders();
       expect(ordersModule.getActiveOrders()).toHaveLength(3);
     });
 
     test('does not duplicate recipe IDs when enough distinct orderable recipes exist', () => {
-      stateModule.setState({ discoveredRecipes: ORDERABLE_RECIPES }); // 5 orderable recipes, 3 slots
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries(...ORDERABLE_RECIPES) }); // 5 orderable recipes, 3 slots
       ordersModule.tryFillOrders();
       const recipeIds = ordersModule.getActiveOrders().map(o => o.recipeId);
       expect(new Set(recipeIds).size).toBe(recipeIds.length);
     });
 
     test('does not exceed 3 slots even when called multiple times', () => {
-      stateModule.setState({ discoveredRecipes: ORDERABLE_RECIPES });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries(...ORDERABLE_RECIPES) });
       ordersModule.tryFillOrders();
       ordersModule.tryFillOrders();
       ordersModule.tryFillOrders();
@@ -74,7 +80,7 @@ describe('order system', () => {
     test('calls the onChanged handler when orders are added', () => {
       const handler = jest.fn();
       ordersModule.setOrdersChangeHandler(handler);
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       expect(handler).toHaveBeenCalled();
     });
@@ -87,7 +93,7 @@ describe('order system', () => {
     });
 
     test('generated order has the expected shape', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const [order] = ordersModule.getActiveOrders();
       expect(order).toMatchObject({
@@ -104,34 +110,34 @@ describe('order system', () => {
     });
 
     test('timeRemaining equals timeLimit when the order is first created', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const [order] = ordersModule.getActiveOrders();
       expect(order.timeRemaining).toBe(order.timeLimit);
     });
 
     test('reward is a positive number', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       expect(ordersModule.getActiveOrders()[0].reward).toBeGreaterThan(0);
     });
 
     test('generated order references a recipe that was discovered', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const [order] = ordersModule.getActiveOrders();
       expect(order.recipeId).toBe('scrambled_eggs');
     });
 
     test('timeLimit is 90 when fewer than 6 recipes discovered', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       expect(ordersModule.getActiveOrders()[0].timeLimit).toBe(90);
     });
 
     test('timeLimit is 70 when 6–13 recipes discovered', () => {
       const sixOrderable = ['scrambled_eggs','caramel','bechamel','toffee','bread','pancakes'];
-      stateModule.setState({ discoveredRecipes: sixOrderable });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries(...sixOrderable) });
       ordersModule.tryFillOrders();
       expect(ordersModule.getActiveOrders()[0].timeLimit).toBe(70);
     });
@@ -142,7 +148,7 @@ describe('order system', () => {
         'vanilla_custard','butterscotch','chocolate_ganache','whipped_cream',
         'horchata','hot_chocolate','lemon_curd','fresh_pasta',
       ];
-      stateModule.setState({ discoveredRecipes: fourteenOrderable });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries(...fourteenOrderable) });
       ordersModule.tryFillOrders();
       expect(ordersModule.getActiveOrders()[0].timeLimit).toBe(52);
     });
@@ -152,7 +158,7 @@ describe('order system', () => {
 
   describe('resetOrders', () => {
     test('clears all active orders', () => {
-      stateModule.setState({ discoveredRecipes: ORDERABLE_RECIPES });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries(...ORDERABLE_RECIPES) });
       ordersModule.tryFillOrders();
       expect(ordersModule.getActiveOrders().length).toBeGreaterThan(0);
       ordersModule.resetOrders();
@@ -160,7 +166,7 @@ describe('order system', () => {
     });
 
     test('resets the ID counter so new orders restart from ord_1', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       ordersModule.resetOrders();
       ordersModule.tryFillOrders();
@@ -176,7 +182,7 @@ describe('order system', () => {
     });
 
     test('returns the fulfilled order object', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const [order] = ordersModule.getActiveOrders();
       const result = ordersModule.fulfillOrder(order.id);
@@ -185,7 +191,7 @@ describe('order system', () => {
     });
 
     test('removes the order from the active list', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const [order] = ordersModule.getActiveOrders();
       ordersModule.fulfillOrder(order.id);
@@ -193,7 +199,7 @@ describe('order system', () => {
     });
 
     test('adds the order reward to the coins balance', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const [order] = ordersModule.getActiveOrders();
       const coinsBefore = stateModule.getState().coins;
@@ -202,7 +208,7 @@ describe('order system', () => {
     });
 
     test('increments completedOrders by 1', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const [order] = ordersModule.getActiveOrders();
       ordersModule.fulfillOrder(order.id);
@@ -210,7 +216,7 @@ describe('order system', () => {
     });
 
     test('accumulates completedOrders across multiple fulfillments', () => {
-      stateModule.setState({ discoveredRecipes: ORDERABLE_RECIPES });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries(...ORDERABLE_RECIPES) });
       ordersModule.tryFillOrders();
       const orders = [...ordersModule.getActiveOrders()];
       for (const order of orders) ordersModule.fulfillOrder(order.id);
@@ -218,7 +224,7 @@ describe('order system', () => {
     });
 
     test('schedules a slot refill via setTimeout', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const [order] = ordersModule.getActiveOrders();
       jest.clearAllTimers();
@@ -235,7 +241,7 @@ describe('order system', () => {
     });
 
     test('decrements timeRemaining by 1 on each active order', () => {
-      stateModule.setState({ discoveredRecipes: ORDERABLE_RECIPES });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries(...ORDERABLE_RECIPES) });
       ordersModule.tryFillOrders();
       const before = ordersModule.getActiveOrders().map(o => o.timeRemaining);
       ordersModule.tickOrders();
@@ -244,14 +250,14 @@ describe('order system', () => {
     });
 
     test('returns an empty array when no orders expire', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const expired = ordersModule.tickOrders();
       expect(expired).toEqual([]);
     });
 
     test('removes an order whose timeRemaining reaches 0', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const [order] = ordersModule.getActiveOrders();
       order.timeRemaining = 1;
@@ -260,7 +266,7 @@ describe('order system', () => {
     });
 
     test('returns expired orders in the result array', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const [order] = ordersModule.getActiveOrders();
       order.timeRemaining = 1;
@@ -270,7 +276,7 @@ describe('order system', () => {
     });
 
     test('can expire multiple orders in a single tick', () => {
-      stateModule.setState({ discoveredRecipes: ORDERABLE_RECIPES });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries(...ORDERABLE_RECIPES) });
       ordersModule.tryFillOrders();
       ordersModule.getActiveOrders().forEach(o => { o.timeRemaining = 1; });
       const expired = ordersModule.tickOrders();
@@ -278,7 +284,7 @@ describe('order system', () => {
     });
 
     test('calls the onChanged handler when orders tick', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const handler = jest.fn();
       ordersModule.setOrdersChangeHandler(handler);
@@ -294,7 +300,7 @@ describe('order system', () => {
     });
 
     test('schedules a slot refill via setTimeout when an order expires', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       const [order] = ordersModule.getActiveOrders();
       order.timeRemaining = 1;
@@ -304,7 +310,7 @@ describe('order system', () => {
     });
 
     test('does not schedule a refill when no orders expire', () => {
-      stateModule.setState({ discoveredRecipes: ['scrambled_eggs'] });
+      stateModule.setState({ discoveredCombinations: fakeDiscoveries('scrambled_eggs') });
       ordersModule.tryFillOrders();
       jest.clearAllTimers();
       ordersModule.tickOrders(); // time > 1, nothing expires

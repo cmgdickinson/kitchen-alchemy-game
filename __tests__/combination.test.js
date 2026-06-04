@@ -1,4 +1,4 @@
-const { tryRecipe } = require('../js/systems/combination');
+const { tryRecipe, combinationKey } = require('../js/systems/combination');
 const { RECIPES } = require('../js/data/recipes');
 
 describe('tryRecipe', () => {
@@ -68,11 +68,13 @@ describe('tryRecipe', () => {
     expect(r1.result).toBe(r2.result);
   });
 
-  test('every recipe defined in RECIPES is discoverable', () => {
+  test('every combination defined in RECIPES is discoverable', () => {
     for (const recipe of RECIPES) {
-      const found = tryRecipe(recipe.ingredients);
-      expect(found).not.toBeNull();
-      expect(found.result).toBe(recipe.result);
+      for (const combination of recipe.combinations) {
+        const found = tryRecipe(combination);
+        expect(found).not.toBeNull();
+        expect(found.result).toBe(recipe.result);
+      }
     }
   });
 
@@ -81,7 +83,26 @@ describe('tryRecipe', () => {
     expect(result).toMatchObject({
       result: 'caramel',
       description: expect.any(String),
-      ingredients: expect.arrayContaining(['sugar', 'butter']),
+      combinations: expect.arrayContaining([expect.arrayContaining(['sugar', 'butter'])]),
     });
+  });
+});
+
+describe('combinationKey', () => {
+  test('produces the same key regardless of input order', () => {
+    expect(combinationKey(['egg', 'butter'])).toBe(combinationKey(['butter', 'egg']));
+  });
+
+  test('does not mutate the input array', () => {
+    const input = ['sugar', 'butter', 'flour'];
+    const copy = [...input];
+    combinationKey(input);
+    expect(input).toEqual(copy);
+  });
+
+  test('matches the key tryRecipe uses internally', () => {
+    const key = combinationKey(['butter', 'egg']);
+    const sorted = key.split(' ');
+    expect(tryRecipe(sorted)?.result).toBe('scrambled_eggs');
   });
 });
