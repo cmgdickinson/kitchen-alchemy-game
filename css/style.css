@@ -187,6 +187,24 @@ section:last-child {
   padding: 14px 18px;
 }
 
+.recipe-placeholder {
+  width: 100%;
+  background: var(--surface-warm);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 18px 14px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.recipe-placeholder-emoji {
+  font-size: 1.6rem;
+  display: block;
+  margin-bottom: 6px;
+}
+
 .recipe-card {
   background: var(--surface);
   border: 2px solid var(--border);
@@ -229,10 +247,6 @@ section:last-child {
   color: var(--text-muted);
   font-style: italic;
   line-height: 1.35;
-}
-
-.recipe-card.undiscovered {
-  opacity: 0.45;
 }
 
 /* ── Modal ── */
