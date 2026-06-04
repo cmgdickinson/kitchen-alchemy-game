@@ -3,7 +3,10 @@ import { STARTING_ITEMS } from '../data/ingredients.js';
 const DEFAULT_STATE = {
   coins: 0,
   unlockedItems: [...STARTING_ITEMS],
-  discoveredRecipes: [],
+  // discoveredCombinations: { [result]: string[] } where each string is a
+  // combinationKey(...). A recipe counts as "discovered" iff this object has
+  // a non-empty array for its result — derived via getDiscoveredRecipes().
+  discoveredCombinations: {},
   triggeredMilestones: [],
   completedOrders: 0,
 };
@@ -56,6 +59,25 @@ export function loadState() {
 // Re-read via getState() whenever you need fresh state.
 export function getState() {
   return _state;
+}
+
+// Derived: the list of result IDs the player has discovered at least one
+// combination for. Order is insertion order into discoveredCombinations,
+// which matches chronological discovery order.
+//
+// Memoised against the discoveredCombinations reference. setState replaces
+// the whole _state on every call, but the inner discoveredCombinations
+// reference only changes when discoveries actually change (patches that
+// don't touch it carry the previous reference through via spread). Same
+// memoisation idiom used in recipeBook.js and main.js for hint counts.
+let _cachedDiscoveredRecipes = null;
+let _cachedDiscoveredCombinations = null;
+export function getDiscoveredRecipes() {
+  if (_state.discoveredCombinations !== _cachedDiscoveredCombinations) {
+    _cachedDiscoveredRecipes = Object.keys(_state.discoveredCombinations);
+    _cachedDiscoveredCombinations = _state.discoveredCombinations;
+  }
+  return _cachedDiscoveredRecipes;
 }
 
 // Replaces _state with a new frozen object combining the previous state and
