@@ -1,8 +1,7 @@
 // Each recipe: { combinations[][], result, description }
-// combinations[] is an array of ingredient sets — a recipe can be reached by any of them.
-// Each inner array is order-agnostic — the combination system sorts ingredients before matching.
-// (combination, result) is unique across all recipes; a single combination is not required
-// to map to a single result.
+// A recipe can be reached by any of its combinations. Each combination is order-agnostic
+// (the combination system sorts before matching). The invariant is (combination, result)
+// uniqueness — a single combination is not required to map to a single result.
 
 export const RECIPES = [
 

@@ -11,9 +11,8 @@ global.localStorage = localStorageMock;
 // scrambled_eggs (egg+butter) and caramel (sugar+butter) are both orderable.
 const ORDERABLE_RECIPES = ['scrambled_eggs', 'caramel', 'bechamel', 'toffee', 'bread'];
 
-// Build a discoveredCombinations stub from a list of fake result IDs. orders.js
-// only cares about which results are discovered; the combination keys themselves
-// don't matter for these tests, so '_' is fine.
+// Stub discoveredCombinations from fake result IDs. orders.js only checks which
+// results are discovered, so each entry just needs a non-empty array.
 const fakeDiscoveries = (...ids) =>
   Object.fromEntries(ids.map(id => [id, ['_']]));
 

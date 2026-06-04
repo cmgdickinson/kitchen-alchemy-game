@@ -78,8 +78,7 @@ function generateOrder() {
 
   const item = INGREDIENTS[recipe.result];
   const timeLimit = timeLimitForState();
-  // Reward is priced by the hardest path — the longest combination — so a player who
-  // knows a shorter combination can fulfil for less work and pocket the efficiency.
+  // Price by the longest combination — shorter known paths pocket the efficiency.
   const longestCombo = Math.max(...recipe.combinations.map(c => c.length));
   const reward = 10 + longestCombo * 4 + Math.floor(Math.random() * 8);
 

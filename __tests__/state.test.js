@@ -235,8 +235,6 @@ describe('state system', () => {
       loadState();
       setState({ discoveredCombinations: { scrambled_eggs: ['butter egg'] } });
       const first = getDiscoveredRecipes();
-      // An unrelated setState replaces _state but carries discoveredCombinations
-      // through by reference, so the memoised result should be the same array.
       setState({ coins: 50 });
       const second = getDiscoveredRecipes();
       expect(second).toBe(first);

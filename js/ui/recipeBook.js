@@ -2,25 +2,17 @@ import { RECIPES } from '../data/recipes.js';
 import { INGREDIENTS } from '../data/ingredients.js';
 import { combinationKey } from '../systems/combination.js';
 
-// Memoised against the discoveredCombinations reference. setState replaces _state
-// on every call, but the inner discoveredCombinations only changes when discoveries
-// actually change (patches that don't touch it carry the previous reference through
-// via spread). So this skips the full DOM rebuild on unrelated state changes (order
-// ticks, coin gains, etc.) as well as on combines that didn't add a new combination.
-// null sentinel means "never rendered yet" — distinct from the initial empty state
-// object, which is a real reference.
+// Memoised against the discoveredCombinations reference — same idiom as state.js.
+// null sentinel for "never rendered" (distinct from the initial empty state object).
 let _lastRenderedCombinations = null;
 
 export function renderRecipeBook(discoveredCombinations) {
-  // Skip the whole render when nothing changed since last call. Saves rebuilding
-  // ~36 (and growing) DOM nodes on every state change that doesn't affect
-  // discoveries, which is the common case during play.
   if (discoveredCombinations === _lastRenderedCombinations) return;
 
   const grid = document.getElementById('recipe-grid');
   if (!grid) return;
-  // Only update the sentinel once we know we're actually rendering — otherwise an
-  // early bail-out below could leave us "claiming" we rendered when we didn't.
+  // Update the sentinel only after the grid lookup — otherwise an early bail-out
+  // would mark us "rendered" when we weren't.
   _lastRenderedCombinations = discoveredCombinations;
 
   const countEl = document.getElementById('recipe-count');
@@ -30,7 +22,6 @@ export function renderRecipeBook(discoveredCombinations) {
 
   const isDiscovered = (recipe) =>
     (discoveredCombinations[recipe.result]?.length ?? 0) > 0;
-  // true (1) − false (0) = 1 sorts b before a, so discovered recipes float to the top
   const sortedRecipes = [...RECIPES].sort((a, b) => isDiscovered(b) - isDiscovered(a));
   let discoveredCount = 0;
 
@@ -42,9 +33,8 @@ export function renderRecipeBook(discoveredCombinations) {
       discoveredCount++;
       const result = INGREDIENTS[recipe.result];
       const foundCombos = new Set(discoveredCombinations[recipe.result]);
-      // Iterate recipe.combinations as the source-of-truth ingredient ordering
-      // (data-file order, not the sorted combinationKey order) so each combo
-      // renders the way the recipe author wrote it.
+      // Iterate recipe.combinations (data-file order) so each combo renders in
+      // the author's intended ingredient order, not the sorted key order.
       const comboLines = recipe.combinations
         .filter(combo => foundCombos.has(combinationKey(combo)))
         .map(combo => combo.map(id => INGREDIENTS[id]?.name ?? id).join(' + '));

@@ -7,9 +7,8 @@ const localStorageMock = {
 
 global.localStorage = localStorageMock;
 
-// Build a discoveredCombinations stub from a list of fake result IDs. milestones.js
-// only cares about the *count* of discovered recipes, so each result just needs a
-// non-empty combination array.
+// Stub discoveredCombinations from fake result IDs. milestones.js only checks the
+// recipe count, so each entry just needs a non-empty array — values don't matter.
 const fakeDiscoveries = (...ids) =>
   Object.fromEntries(ids.map(id => [id, ['_']]));
 

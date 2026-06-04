@@ -64,11 +64,9 @@ describe('RECIPES', () => {
     expect(new Set(results).size).toBe(results.length);
   });
 
-  // Today's stricter invariant: each combination key is globally unique. When the
-  // first multi-result-from-one-combination recipe is authored, relax this to
-  // "(combination, result) is unique" — the production code (recipeMap.set in
-  // combination.js) silently overwrites collisions, so any relaxation here must
-  // be paired with a change there.
+  // Strict for now: each combination key globally unique. Relax to "(combination,
+  // result) unique" when the first multi-result recipe lands — and pair with a
+  // change in combination.js's recipeMap (Map.set silently overwrites collisions).
   test('no two combinations share the same sorted ingredient set', () => {
     const seen = new Map();
     for (const recipe of RECIPES) {

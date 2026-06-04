@@ -3,9 +3,8 @@ import { STARTING_ITEMS } from '../data/ingredients.js';
 const DEFAULT_STATE = {
   coins: 0,
   unlockedItems: [...STARTING_ITEMS],
-  // discoveredCombinations: { [result]: string[] } where each string is a
-  // combinationKey(...). A recipe counts as "discovered" iff this object has
-  // a non-empty array for its result — derived via getDiscoveredRecipes().
+  // { [result]: combinationKey[] }. A recipe is "discovered" iff this has a
+  // non-empty array for its result — derive via getDiscoveredRecipes().
   discoveredCombinations: {},
   triggeredMilestones: [],
   completedOrders: 0,
@@ -61,15 +60,10 @@ export function getState() {
   return _state;
 }
 
-// Derived: the list of result IDs the player has discovered at least one
-// combination for. Order is insertion order into discoveredCombinations,
-// which matches chronological discovery order.
-//
-// Memoised against the discoveredCombinations reference. setState replaces
-// the whole _state on every call, but the inner discoveredCombinations
-// reference only changes when discoveries actually change (patches that
-// don't touch it carry the previous reference through via spread). Same
-// memoisation idiom used in recipeBook.js and main.js for hint counts.
+// Derived: result IDs with at least one discovered combination, in chronological
+// discovery order. Memoised against the discoveredCombinations reference — setState
+// carries unchanged inner references through via spread, so the cache stays valid
+// across unrelated state changes (order ticks, coin gains).
 let _cachedDiscoveredRecipes = null;
 let _cachedDiscoveredCombinations = null;
 export function getDiscoveredRecipes() {
