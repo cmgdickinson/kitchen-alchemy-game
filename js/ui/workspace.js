@@ -33,28 +33,33 @@ export function renderWorkspace(selectedIds) {
   combineBtn.disabled = selectedIds.length < 2;
 }
 
-export function showSuccess(recipe, resultItem, isNew) {
+export function showSuccess(matches) {
   _clearResultTimer();
   const area = document.getElementById('result-area');
   if (!area) return;
 
-  const tag = isNew ? 'New Discovery!' : 'Already Known';
-  const tagClass = isNew ? '' : 'known';
+  area.innerHTML = '';
+  for (const { recipe, resultItem, isNewRecipe } of matches) {
+    const tag = isNewRecipe ? 'New Discovery!' : 'Already Known';
+    const tagClass = isNewRecipe ? '' : 'known';
+    const cardClass = isNewRecipe ? '' : 'already-known';
 
-  area.innerHTML = `
-    <div class="result-card ${isNew ? '' : 'already-known'}">
+    const card = document.createElement('div');
+    card.className = `result-card ${cardClass}`.trim();
+    card.innerHTML = `
       <div class="result-card-top">
         <span class="result-card-emoji"></span>
         <span class="result-card-name"></span>
         <span class="result-card-tag ${tagClass}">${tag}</span>
       </div>
       <p class="result-card-desc"></p>
-    </div>
-  `;
-  // textContent — prevents XSS (convention note in pantry.js)
-  area.querySelector('.result-card-emoji').textContent = resultItem.emoji;
-  area.querySelector('.result-card-name').textContent = resultItem.name;
-  area.querySelector('.result-card-desc').textContent = recipe.description;
+    `;
+    // textContent — prevents XSS (convention note in pantry.js)
+    card.querySelector('.result-card-emoji').textContent = resultItem.emoji;
+    card.querySelector('.result-card-name').textContent = resultItem.name;
+    card.querySelector('.result-card-desc').textContent = recipe.description;
+    area.appendChild(card);
+  }
 
   _resultClearTimer = setTimeout(() => { area.innerHTML = ''; }, 10000);
 }

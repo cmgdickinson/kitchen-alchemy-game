@@ -1,13 +1,22 @@
 import { RECIPES } from '../data/recipes.js';
 
-// Pre-build a map of sorted-ingredient-key → recipe for O(1) lookup
+// Canonical combination key — callers must use this helper rather than rolling their own
+// sort-and-join. Drift would silently miss matches.
+export function combinationKey(ingredientIds) {
+  return ingredientIds.slice().sort().join(' ');
+}
+
+// combinationKey → recipes producible by that combination. A combination may map to
+// more than one recipe; recipes with N combinations each contribute N entries.
 const recipeMap = new Map();
 for (const recipe of RECIPES) {
-  const key = recipe.ingredients.slice().sort().join(' ');
-  recipeMap.set(key, recipe);
+  for (const combination of recipe.combinations) {
+    const key = combinationKey(combination);
+    if (!recipeMap.has(key)) recipeMap.set(key, []);
+    recipeMap.get(key).push(recipe);
+  }
 }
 
 export function tryRecipe(ingredientIds) {
-  const key = ingredientIds.slice().sort().join(' ');
-  return recipeMap.get(key) ?? null;
+  return recipeMap.get(combinationKey(ingredientIds)) ?? [];
 }

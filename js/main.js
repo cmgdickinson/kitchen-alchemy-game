@@ -1,5 +1,5 @@
-import { loadState, getState, setState, resetState } from './systems/state.js';
-import { tryRecipe } from './systems/combination.js';
+import { loadState, getState, setState, resetState, getDiscoveredRecipes } from './systems/state.js';
+import { tryRecipe, combinationKey } from './systems/combination.js';
 import { checkMilestones } from './systems/milestones.js';
 import {
   setOrdersChangeHandler, getActiveOrders,
@@ -49,7 +49,10 @@ function computeHintCounts(discoveredRecipes) {
   const discoveredSet = new Set(discoveredRecipes); // O(1) lookup per recipe vs O(n) with array.includes
   for (const recipe of RECIPES) {
     if (!discoveredSet.has(recipe.result)) {
-      for (const ing of recipe.ingredients) {
+      // Dedup per recipe: hints count "recipes-I-still-need that use this ingredient",
+      // not paths to them.
+      const uniqueIngredients = new Set(recipe.combinations.flat());
+      for (const ing of uniqueIngredients) {
         counts[ing] = (counts[ing] ?? 0) + 1;
       }
     }
@@ -57,17 +60,14 @@ function computeHintCounts(discoveredRecipes) {
   return counts;
 }
 
-// Memoization cache for computeHintCounts. The result depends only on
-// discoveredRecipes, which is append-only between resets and goes back to 0
-// on reset — so .length is a sufficient fingerprint. Same trick as the
-// memoization in recipeBook.js. -1 is the "never cached yet" sentinel (0 is
-// a legitimate length for a fresh game).
+// Memoised on the derived list's length — sufficient because the list is append-only
+// between resets. -1 sentinel for "never cached" (0 is a valid length).
 let _cachedHintCounts = null;
 let _cachedHintCountsForLen = -1;
 
 function currentHintCounts() {
   if (!_hintsEnabled) return null;
-  const discovered = getState().discoveredRecipes;
+  const discovered = getDiscoveredRecipes();
   if (discovered.length !== _cachedHintCountsForLen) {
     _cachedHintCounts = computeHintCounts(discovered);
     _cachedHintCountsForLen = discovered.length;
@@ -82,8 +82,8 @@ function fullRedraw() {
   // are wanted, so we hardcode an empty list here.
   renderPantry(state.unlockedItems, _selected, [], currentHintCounts());
   renderWorkspace(_selected);
-  renderRecipeBook(state.discoveredRecipes);
-  renderOrderBoard(getActiveOrders(), state.discoveredRecipes);
+  renderRecipeBook(state.discoveredCombinations);
+  renderOrderBoard(getActiveOrders(), getDiscoveredRecipes());
   updateCoins();
   updateOrdersCompleted();
 }
@@ -145,68 +145,78 @@ function handleWorkspaceRemove(id) {
 function handleCombine() {
   if (_selected.length < 2) return;
 
-  const recipe = tryRecipe(_selected);
+  const recipes = tryRecipe(_selected);
 
-  if (!recipe) {
+  if (recipes.length === 0) {
     showFailure(FAILURE_MESSAGES[Math.floor(Math.random() * FAILURE_MESSAGES.length)]);
     return;
   }
 
   const state = getState();
-  // .includes returns true/false for a single check — no Set needed for one lookup
-  const isNew = !state.discoveredRecipes.includes(recipe.result);
-  const resultItem = INGREDIENTS[recipe.result];
+  const comboKey = combinationKey(_selected);
 
-  if (isNew) {
-    // Unlock the result item and record the discovery.
-    // [...arr] uses the spread operator to make a shallow copy, so we don't mutate state directly.
+  const matches = recipes.map(recipe => {
+    const existingCombos = state.discoveredCombinations[recipe.result] ?? [];
+    return {
+      recipe,
+      resultItem: INGREDIENTS[recipe.result],
+      existingCombos,
+      isNewCombo: !existingCombos.includes(comboKey),
+      isNewRecipe: existingCombos.length === 0,
+    };
+  });
+
+  const anyNewCombo = matches.some(m => m.isNewCombo);
+  const anyNewRecipe = matches.some(m => m.isNewRecipe);
+
+  if (anyNewCombo) {
+    const newDiscovered = { ...state.discoveredCombinations };
     const newUnlocked = [...state.unlockedItems];
-    // Guards against a recipe result that's already unlocked — currently impossible since each
-    // recipe has a unique result, but will matter once a result can be reached by multiple combos.
-    // In that future case, discovering a new combo path for an already-unlocked result will skip
-    // the "New!" flash (no flash for an item the player can already see in the pantry) while still
-    // recording the new combo path as discovered.
-    if (!state.unlockedItems.includes(recipe.result)) {
-      newUnlocked.push(recipe.result);
-      _newItems = [recipe.result];
+    for (const m of matches) {
+      if (!m.isNewCombo) continue;
+      newDiscovered[m.recipe.result] = [...m.existingCombos, comboKey];
+      // Guard against the result already being in the pantry (e.g. milestone reward).
+      if (m.isNewRecipe && !newUnlocked.includes(m.recipe.result)) {
+        newUnlocked.push(m.recipe.result);
+        _newItems.push(m.recipe.result);
+      }
     }
-    setState({
-      discoveredRecipes: [...state.discoveredRecipes, recipe.result],
-      unlockedItems: newUnlocked,
-    });
 
-    // Check milestones after the state update
-    const triggered = checkMilestones();
-    if (triggered.length > 0) {
-      _milestoneQueue.push(...triggered);
-      setTimeout(showNextMilestone, 800);
-      _newItems.push(...triggered.map(m => m.reward));
+    const patch = { discoveredCombinations: newDiscovered };
+    if (newUnlocked.length !== state.unlockedItems.length) patch.unlockedItems = newUnlocked;
+    setState(patch);
+
+    // Milestones depend on discovered-recipe count — only bumped on new-recipe discoveries.
+    if (anyNewRecipe) {
+      const triggered = checkMilestones();
+      if (triggered.length > 0) {
+        _milestoneQueue.push(...triggered);
+        setTimeout(showNextMilestone, 800);
+        _newItems.push(...triggered.map(m => m.reward));
+      }
     }
   }
 
-  showSuccess(recipe, resultItem, isNew);
+  showSuccess(matches);
   _selected = [];
 
-  // Renderer dispatch — call only the panels whose inputs actually changed.
-  // We avoid fullRedraw here so a successful combine of an already-known recipe
-  // doesn't pointlessly rebuild the recipe book and order board.
-  if (isNew) {
-    // setState() above (and checkMilestones, which may also setState) changed
-    // discoveredRecipes / unlockedItems / triggeredMilestones, so re-read state.
+  // Skip fullRedraw when no game state changed — saves rebuilding the recipe
+  // book and order board on a combine of an already-known combination.
+  if (anyNewCombo) {
+    // setState above (plus checkMilestones, which may also setState) replaced _state.
     const updated = getState();
     renderPantry(updated.unlockedItems, _selected, _newItems, currentHintCounts());
     renderWorkspace(_selected);
-    renderRecipeBook(updated.discoveredRecipes);
-    renderOrderBoard(getActiveOrders(), updated.discoveredRecipes);
+    renderRecipeBook(updated.discoveredCombinations);
+    renderOrderBoard(getActiveOrders(), getDiscoveredRecipes());
   } else {
-    // Known recipe: no game state changed, only the workspace selection was cleared.
-    // Pantry redraw is still needed to drop the "selected" highlight from the cards.
+    // Pantry redraw drops the selection highlight; nothing else needs updating.
     renderPantry(state.unlockedItems, _selected, [], currentHintCounts());
     renderWorkspace(_selected);
   }
   _newItems = [];
 
-  if (isNew && getActiveOrders().length === 0) tryFillOrders();
+  if (anyNewRecipe && getActiveOrders().length === 0) tryFillOrders();
 }
 
 // ── Orders ────────────────────────────────────────────────────────────────────
@@ -224,7 +234,7 @@ function handleFulfill(orderId) {
 
   spawnCoinFloat(order.reward);
   const state = getState();
-  renderOrderBoard(getActiveOrders(), state.discoveredRecipes);
+  renderOrderBoard(getActiveOrders(), getDiscoveredRecipes());
   updateCoins();
   updateOrdersCompleted();
   if (triggered.length > 0) {
@@ -311,7 +321,7 @@ function init() {
   wireEvents();
 
   setOrdersChangeHandler(() => {
-    renderOrderBoard(getActiveOrders(), getState().discoveredRecipes);
+    renderOrderBoard(getActiveOrders(), getDiscoveredRecipes());
   });
 
   startOrderTimer(handleOrderExpired);

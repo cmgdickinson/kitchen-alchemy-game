@@ -1,8 +1,6 @@
 import { INGREDIENTS } from '../data/ingredients.js';
 
-// Placeholder text for the two empty-board situations. Hard-coded HTML, no
-// dynamic data — see XSS convention note in pantry.js for why innerHTML is
-// acceptable here but not for ingredient/customer names.
+// Hardcoded HTML, no dynamic data, so innerHTML is safe here (see pantry.js).
 const NO_ORDERABLE_RECIPES_MSG =
   '<span class="order-placeholder-emoji">🍽️</span> Discover more recipes to<br>attract hungry customers!';
 const REFILL_COMING_MSG =

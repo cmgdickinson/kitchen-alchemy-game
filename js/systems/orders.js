@@ -1,19 +1,11 @@
 import { RECIPES } from '../data/recipes.js';
 import { INGREDIENTS } from '../data/ingredients.js';
-import { getState, setState } from './state.js';
+import { getState, setState, getDiscoveredRecipes } from './state.js';
 
 const MAX_ORDERS = 3;
 
-// Result-id → recipe lookup built once at module load. Lets getOrderableRecipes
-// resolve a discovered recipe by its result id in O(1) instead of scanning the
-// whole RECIPES array per lookup.
-//
-// `RECIPES.map(r => [r.result, r])` produces an array of [key, value] pairs
-// (e.g. [['paste', {...}], ['egg_wash', {...}], ...]), which is the shape the
-// Map constructor expects.
-//
-// Mirrors the pattern in combination.js, which builds a similar lookup keyed
-// by sorted-ingredient-string instead.
+// Result-id → recipe lookup; lets getOrderableRecipes resolve discovered recipes
+// in O(1) instead of scanning RECIPES per lookup.
 const _recipesByResult = new Map(RECIPES.map(r => [r.result, r]));
 
 const CUSTOMER_NAMES = [
@@ -47,18 +39,17 @@ export function getActiveOrders() {
 }
 
 function getOrderableRecipes() {
-  const { discoveredRecipes } = getState();
   // .get() returns the recipe object for that result id, or undefined if not found.
   // The .filter() then drops any undefineds plus any recipes whose result item
   // isn't marked orderable in INGREDIENTS.
-  return discoveredRecipes
+  return getDiscoveredRecipes()
     .map(id => _recipesByResult.get(id))
     .filter(r => r && INGREDIENTS[r.result]?.orderable);
 }
 
 // May remove this functionality in future. Different time limits add nothing of value.
 function timeLimitForState() {
-  const count = getState().discoveredRecipes.length;
+  const count = getDiscoveredRecipes().length;
   if (count < 6)  return 90;
   if (count < 14) return 70;
   return 52;
@@ -79,7 +70,9 @@ function generateOrder() {
 
   const item = INGREDIENTS[recipe.result];
   const timeLimit = timeLimitForState();
-  const reward = 10 + recipe.ingredients.length * 4 + Math.floor(Math.random() * 8);
+  // Price by the longest combination — shorter known paths pocket the efficiency.
+  const longestCombo = Math.max(...recipe.combinations.map(c => c.length));
+  const reward = 10 + longestCombo * 4 + Math.floor(Math.random() * 8);
 
   return {
     id: `ord_${++_idCounter}`,

@@ -37,9 +37,16 @@ describe('RECIPES', () => {
     }
   });
 
-  test('every recipe ingredient ID exists in INGREDIENTS', () => {
+  test('every recipe has at least one combination', () => {
     for (const recipe of RECIPES) {
-      for (const ing of recipe.ingredients) {
+      expect(Array.isArray(recipe.combinations)).toBe(true);
+      expect(recipe.combinations.length).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  test('every ingredient ID across all combinations exists in INGREDIENTS', () => {
+    for (const recipe of RECIPES) {
+      for (const ing of recipe.combinations.flat()) {
         expect(INGREDIENTS[ing]).toBeDefined();
       }
     }
@@ -57,24 +64,30 @@ describe('RECIPES', () => {
     expect(new Set(results).size).toBe(results.length);
   });
 
-  test('no two recipes share the same sorted ingredient combination', () => {
-    const seen = new Map();
+  test('every (combination, result) pair is unique', () => {
+    const seen = new Set();
     for (const recipe of RECIPES) {
-      const key = recipe.ingredients.slice().sort().join('|');
-      expect(seen.has(key)).toBe(false);
-      seen.set(key, recipe.result);
+      for (const combination of recipe.combinations) {
+        const pair = `${combination.slice().sort().join('|')} → ${recipe.result}`;
+        expect(seen.has(pair)).toBe(false);
+        seen.add(pair);
+      }
     }
   });
 
-  test('every recipe requires at least 2 ingredients', () => {
+  test('every combination has at least 2 ingredients', () => {
     for (const recipe of RECIPES) {
-      expect(recipe.ingredients.length).toBeGreaterThanOrEqual(2);
+      for (const combination of recipe.combinations) {
+        expect(combination.length).toBeGreaterThanOrEqual(2);
+      }
     }
   });
 
-  test('every recipe requires at most 4 ingredients', () => {
+  test('every combination has at most 4 ingredients', () => {
     for (const recipe of RECIPES) {
-      expect(recipe.ingredients.length).toBeLessThanOrEqual(4);
+      for (const combination of recipe.combinations) {
+        expect(combination.length).toBeLessThanOrEqual(4);
+      }
     }
   });
 

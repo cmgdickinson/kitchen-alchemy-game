@@ -1,8 +1,9 @@
 import { MILESTONES } from '../data/milestones.js';
-import { getState, setState } from './state.js';
+import { getState, setState, getDiscoveredRecipes } from './state.js';
 
 export function checkMilestones() {
   const state = getState();
+  const discoveredCount = getDiscoveredRecipes().length;
   const triggered = [];
 
   // We collect the new ids/rewards in separate arrays, then build the new
@@ -16,7 +17,7 @@ export function checkMilestones() {
     if (state.triggeredMilestones.includes(milestone.id)) continue;
     const { type, count } = milestone.condition;
     const met =
-      type === 'discoveries' ? state.discoveredRecipes.length >= count :
+      type === 'discoveries' ? discoveredCount >= count :
       type === 'orders'      ? state.completedOrders >= count :
       false;
     if (met) {
