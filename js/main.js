@@ -250,12 +250,9 @@ function handleOrderExpired(expired) {
 
 function toggleRecipeBook() {
   const book   = document.getElementById('recipe-book');
-  const btn    = document.getElementById('recipe-book-toggle');
   const arrow  = document.getElementById('toggle-arrow');
-  const isOpen = book.classList.contains('open');
-  book.classList.toggle('open', !isOpen);
-  btn.classList.toggle('open', !isOpen);
-  arrow.textContent = isOpen ? '▲' : '▼';
+  const isOpen = book.classList.toggle('open');
+  arrow.textContent = isOpen ? '▼' : '▲';
 }
 
 // ── Reset ─────────────────────────────────────────────────────────────────────
