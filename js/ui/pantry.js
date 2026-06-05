@@ -1,20 +1,11 @@
 import { INGREDIENTS } from '../data/ingredients.js';
 
 // ── UI rendering convention (applies to all files in js/ui/) ────────────────
-// Dynamic values (ingredient names, recipe descriptions, customer names, etc.)
-// are written via element.textContent or DOM methods like createElement, never
-// by interpolating into innerHTML strings.
-//
-// Why: .textContent treats its input as plain text. innerHTML parses it as HTML,
-// so any "<script>..." or '<img onerror="...">' hiding in a value would execute.
-// Today every dynamic value comes from constant data files, so this is purely
-// defensive — but it means the convention survives future changes like
-// player-named save files, custom recipes, or imported recipe packs without
-// each UI file needing a security review.
-//
-// Watch for this when reading the code: lines that build a small skeleton with
-// innerHTML and then fill the empty <span>s via .textContent are doing this
-// deliberately. A short "// textContent — prevents XSS" comment marks each spot.
+// Dynamic values go through .textContent, never innerHTML. Today every value
+// comes from constant data, so this is defensive — but it keeps the convention
+// in place for future changes like player-named saves or imported recipe packs.
+// Lines that build a skeleton with innerHTML and fill <span>s via .textContent
+// are marked with a short "// textContent — prevents XSS" comment.
 
 // hintCounts: object of ingredientId → number of undiscovered recipes it appears in,
 // or null when the hints feature is disabled.

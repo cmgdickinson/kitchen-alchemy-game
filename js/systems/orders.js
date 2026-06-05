@@ -4,16 +4,8 @@ import { getState, setState, getDiscoveredRecipes } from './state.js';
 
 const MAX_ORDERS = 3;
 
-// Result-id → recipe lookup built once at module load. Lets getOrderableRecipes
-// resolve a discovered recipe by its result id in O(1) instead of scanning the
-// whole RECIPES array per lookup.
-//
-// `RECIPES.map(r => [r.result, r])` produces an array of [key, value] pairs
-// (e.g. [['paste', {...}], ['egg_wash', {...}], ...]), which is the shape the
-// Map constructor expects.
-//
-// Mirrors the pattern in combination.js, which builds a similar lookup keyed
-// by sorted-ingredient-string instead.
+// Result-id → recipe lookup; lets getOrderableRecipes resolve discovered recipes
+// in O(1) instead of scanning RECIPES per lookup.
 const _recipesByResult = new Map(RECIPES.map(r => [r.result, r]));
 
 const CUSTOMER_NAMES = [

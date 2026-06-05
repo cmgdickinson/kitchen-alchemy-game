@@ -3,8 +3,7 @@ import { STARTING_ITEMS } from '../data/ingredients.js';
 const DEFAULT_STATE = {
   coins: 0,
   unlockedItems: [...STARTING_ITEMS],
-  // { [result]: combinationKey[] }. A recipe is "discovered" iff this has a
-  // non-empty array for its result — derive via getDiscoveredRecipes().
+  // { [result]: combinationKey[] }. Use getDiscoveredRecipes() for the recipe list.
   discoveredCombinations: {},
   triggeredMilestones: [],
   completedOrders: 0,
@@ -12,15 +11,7 @@ const DEFAULT_STATE = {
 
 const STORAGE_KEY = 'kitchen-alchemy-v1';
 
-// Recursively freezes obj and every nested object/array.
-//
-// Object.freeze locks the top-level only — without this helper,
-// `frozen.items.push(...)` would still work because the array itself isn't
-// frozen, only the property pointing to it. We walk Object.values once,
-// freezing every nested object/array, then freeze the parent on the way back.
-// Already-frozen objects are safe to re-freeze (Object.freeze is a no-op on
-// them), so deepFreeze can run on a state object whose old arrays are carried
-// over from a previous state without issue.
+// Object.freeze is shallow; this recurses to lock nested arrays/objects too.
 function deepFreeze(obj) {
   for (const v of Object.values(obj)) {
     if (v && typeof v === 'object') deepFreeze(v);
@@ -28,8 +19,6 @@ function deepFreeze(obj) {
   return Object.freeze(obj);
 }
 
-// _state is always a deep-frozen object. We replace it (rather than mutate it)
-// on every setState/loadState/resetState — see comments on those functions.
 let _state = deepFreeze(structuredClone(DEFAULT_STATE));
 
 export function loadState() {
@@ -37,7 +26,7 @@ export function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Merge with defaults so new fields survive version upgrades
+      // Merge with defaults so new fields survive version upgrades.
       _state = deepFreeze({ ...DEFAULT_STATE, ...parsed });
       return;
     }
@@ -47,23 +36,15 @@ export function loadState() {
   _state = deepFreeze(structuredClone(DEFAULT_STATE));
 }
 
-// Returns the current state as a frozen reference — no clone.
-//
-// Callers must treat the result as read-only; mutations throw TypeError in
-// strict mode (which ES modules use by default). To change state, build a
-// patch object and call setState.
-//
-// Don't hold onto a getState() result across a setState boundary — the
-// underlying object is replaced, not mutated, so an old reference is stale.
-// Re-read via getState() whenever you need fresh state.
+// Don't hold a getState() result across a setState — setState replaces _state,
+// so old references go stale.
 export function getState() {
   return _state;
 }
 
-// Derived: result IDs with at least one discovered combination, in chronological
-// discovery order. Memoised against the discoveredCombinations reference — setState
-// carries unchanged inner references through via spread, so the cache stays valid
-// across unrelated state changes (order ticks, coin gains).
+// Memoised: the discoveredCombinations reference only changes when discoveries
+// actually change (setState's spread carries it through unchanged otherwise),
+// so the cache stays valid across unrelated state changes.
 let _cachedDiscoveredRecipes = null;
 let _cachedDiscoveredCombinations = null;
 export function getDiscoveredRecipes() {
@@ -74,9 +55,6 @@ export function getDiscoveredRecipes() {
   return _cachedDiscoveredRecipes;
 }
 
-// Replaces _state with a new frozen object combining the previous state and
-// the patch. Spread `{..._state, ...patch}` makes a fresh shallow copy: keys
-// in patch overwrite the old values, keys absent from patch carry over.
 export function setState(patch) {
   _state = deepFreeze({ ..._state, ...patch });
   try {
