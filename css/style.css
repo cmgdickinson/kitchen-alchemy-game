@@ -161,12 +161,7 @@ section:last-child {
 
 .toggle-arrow {
   margin-left: auto;
-  transition: transform 0.3s;
   font-size: 0.75rem;
-}
-
-.recipe-book-toggle.open .toggle-arrow {
-  transform: rotate(180deg);
 }
 
 .recipe-book {
